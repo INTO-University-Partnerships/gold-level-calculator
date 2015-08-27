@@ -6,7 +6,7 @@ cabal-version:       >=1.10
 executable gold-level-calculator
   main-is:             Main.hs
   hs-source-dirs:      src/
-  other-modules:       Types
+  other-modules:       Types, Parse
   other-extensions:    OverloadedStrings
-  build-depends:       base, foldl, text, turtle, optparse-applicative, cassava
+  build-depends:       base, bytestring, vector, cassava
   default-language:    Haskell2010
