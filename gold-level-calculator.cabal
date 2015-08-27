@@ -8,5 +8,13 @@ executable gold-level-calculator
   hs-source-dirs:      src/
   other-modules:       Types, Parse
   other-extensions:    OverloadedStrings
-  build-depends:       base, bytestring, vector, cassava
+  build-depends:       base, bytestring, text, vector, cassava, attoparsec
+  default-language:    Haskell2010
+
+test-suite gold-level-calculator-test
+  type:                exitcode-stdio-1.0
+  main-is:             Test.hs
+  hs-source-dirs:      test/, src/
+  other-modules:       Types, Parse
+  build-depends:       base, bytestring, text, vector, cassava, attoparsec, QuickCheck
   default-language:    Haskell2010

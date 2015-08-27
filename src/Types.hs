@@ -2,9 +2,30 @@
 
 module Types where
 
-data IELTSLevel  = L45 | L50 | L55 | L60 | L65 deriving (Eq, Ord)
-data LetterScore = A1 | A1P | A2 | A2P | B1 | B1P | B2 | B2P | C1 | C1P | C2 | C2P deriving (Eq, Ord)
-data Target      = NoGOLD | L1 | L2 | L3 | Exception | Alert deriving (Eq, Show)
+import qualified Data.Vector as V
+
+data IELTSLevel   = L45 | L50 | L55 | L60 | L65 deriving (Eq, Ord)
+type NumericScore = Int
+data LetterScore  = A1 | A1P | A2 | A2P | B1 | B1P | B2 | B2P | C1 | C1P | C2 | C2P deriving (Eq, Ord)
+data Target       = NoGOLD | L1 | L2 | L3 | Exception | Alert deriving Eq
+
+data NumericScoreRange = NumericScoreRange NumericScore NumericScore deriving Show
+data LetterScoreRange  = LetterScoreRange  LetterScore  LetterScore  deriving Show
+
+data ScoreTarget = ScoreTarget {
+    scoreTargetlevel :: IELTSLevel,
+    targets          :: V.Vector Target
+} deriving Show
+
+data ScoreGroup = ScoreGroup {
+    scoreGrouplevel     :: IELTSLevel,
+    scoreGroupName      :: String,
+    listeningScoreRange :: NumericScoreRange,
+    readingScoreRange   :: NumericScoreRange,
+    writingScoreRange   :: LetterScoreRange,
+    speakingScoreRange  :: LetterScoreRange,
+    matchCount          :: V.Vector Int
+} deriving Show
 
 instance Show IELTSLevel where
     show L45 = "4.5"
@@ -27,27 +48,10 @@ instance Show LetterScore where
     show C2  = "C2"
     show C2P = "C2+"
 
-type ListeningScore = Int
-type ReadingScore   = Int
-type WritingScore   = LetterScore
-type SpeakingScore  = LetterScore
-
-type ListeningScoreRange = (ListeningScore, ListeningScore)
-type ReadingScoreRange   = (ReadingScore,   ReadingScore)
-type WritingScoreRange   = (WritingScore,   WritingScore)
-type SpeakingScoreRange  = (SpeakingScore,  SpeakingScore)
-
-data ScoreTarget = ST {
-    scoreTargetlevel :: IELTSLevel,
-    targets          :: [Target]
-} deriving Show
-
-data ScoreGroup = SG {
-    scoreGrouplevel     :: IELTSLevel,
-    scoreGroupName      :: String,
-    listeningScoreRange :: ListeningScoreRange,
-    readingScoreRange   :: ReadingScoreRange,
-    writingScoreRange   :: WritingScoreRange,
-    speakingScoreRange  :: SpeakingScoreRange,
-    tally               :: [Int]
-} deriving Show
+instance Show Target where
+    show NoGOLD    = "No GOLD"
+    show L1        = "L1"
+    show L2        = "L2"
+    show L3        = "L3"
+    show Exception = "X"
+    show Alert     = "Alert"
