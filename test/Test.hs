@@ -125,7 +125,7 @@ prop_parseRecord_ScoreGroup_success l n ls rs ws ss (IntList ms) = (not . null) 
     case runParser (parseRecord r :: Parser ScoreGroup) of
         Right (ScoreGroup l' n' ls' rs' ws' ss' v) -> l' == l && n' == n && ls' == ls && rs' == rs && ws' == ws && ss' == ss && V.toList v == ms
         Left _ -> False
-    where r = V.fromList $ map (encodeUtf8 . T.pack) $ [show l] ++ [n] ++ [show ls, show rs, show ws, show ss, ""] ++ map show ms
+    where r = V.fromList $ map (encodeUtf8 . T.pack) $ [show l, n, show ls, show rs, show ws, show ss, ""] ++ map show ms
 
 prop_parseRecord_ScoreGroup_fail :: [String] -> Bool
 prop_parseRecord_ScoreGroup_fail xs =
