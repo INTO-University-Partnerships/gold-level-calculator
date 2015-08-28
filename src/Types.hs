@@ -9,8 +9,8 @@ type NumericScore = Int
 data LetterScore  = A1 | A1P | A2 | A2P | B1 | B1P | B2 | B2P | C1 | C1P | C2 | C2P deriving (Eq, Ord)
 data Target       = NoGOLD | L1 | L2 | L3 | Exception | Alert deriving Eq
 
-data NumericScoreRange = NumericScoreRange NumericScore NumericScore deriving Show
-data LetterScoreRange  = LetterScoreRange  LetterScore  LetterScore  deriving Show
+data NumericScoreRange = NumericScoreRange NumericScore NumericScore deriving Eq
+data LetterScoreRange  = LetterScoreRange  LetterScore  LetterScore  deriving Eq
 
 data ScoreTarget = ScoreTarget {
     scoreTargetlevel :: IELTSLevel,
@@ -55,3 +55,9 @@ instance Show Target where
     show L3        = "L3"
     show Exception = "X"
     show Alert     = "Alert"
+
+instance Show NumericScoreRange where
+    show (NumericScoreRange lower upper) = show lower ++ " to " ++ show upper
+
+instance Show LetterScoreRange where
+    show (LetterScoreRange lower upper) = show lower ++ " to " ++ show upper

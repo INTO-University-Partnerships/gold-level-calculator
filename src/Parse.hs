@@ -10,6 +10,12 @@ import qualified Data.Vector as V
 import qualified Data.Attoparsec.Text as AT
 import Data.Csv
 
+numberOfCsvColumns :: Int
+numberOfCsvColumns = 41
+
+targetStartsAtColumn :: Int
+targetStartsAtColumn = 7 -- zero-based
+
 parseNumericScore :: AT.Parser NumericScore
 parseNumericScore = do
     n <- AT.decimal
@@ -60,6 +66,11 @@ parseLetterScoreRange = do
     AT.skipSpace
     return $ LetterScoreRange lower upper
 
+parserMultipleColumns :: FromField a => Record -> [Int] -> Parser (V.Vector a)
+parserMultipleColumns v xs = do
+    ms <- mapM (index v) xs
+    pure (V.fromList ms)
+
 instance FromField IELTSLevel where
     parseField f
         | f == "4.5" = pure L45
@@ -88,6 +99,25 @@ instance FromField NumericScoreRange where
     parseField f = case AT.parseOnly (parseNumericScoreRange <* AT.endOfInput) (decodeUtf8 f) of
         Right r -> pure r
         Left _  -> mzero
+
+instance FromRecord ScoreTarget where
+    parseRecord v
+        | length v == numberOfCsvColumns = ScoreTarget <$>
+                                           v .! 0      <*>
+                                           parserMultipleColumns v [targetStartsAtColumn..numberOfCsvColumns-1]
+        | otherwise = mzero
+
+instance FromRecord ScoreGroup where
+    parseRecord v
+        | length v == numberOfCsvColumns = ScoreGroup <$>
+                                           v .! 0     <*>
+                                           v .! 1     <*>
+                                           v .! 2     <*>
+                                           v .! 3     <*>
+                                           v .! 4     <*>
+                                           v .! 5     <*>
+                                           parserMultipleColumns v [targetStartsAtColumn..numberOfCsvColumns-1]
+        | otherwise = mzero
 
 type Matrix = V.Vector (V.Vector BL.ByteString)
 
