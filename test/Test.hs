@@ -20,7 +20,7 @@ numericScoreRange :: [Int]
 numericScoreRange = [0..100]
 
 letterScoreRange :: [LetterScore]
-letterScoreRange = [A1, A1P, A2, A2P, B1, B1P, B2, B2P, C1, C1P, C2, C2P]
+letterScoreRange = [A1, A1P, A2, A2P, B1, B1P, B2, B2P, C1, C1P, C2]
 
 instance Arbitrary IELTSLevel where
     arbitrary = elements [L45, L50, L55, L60, L65]

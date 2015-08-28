@@ -41,7 +41,6 @@ parseLetterScore = do
             | i == "C1 " = Just C1
             | i == "C1+" = Just C1P
             | i == "C2 " = Just C2
-            | i == "C2+" = Just C2P
             | otherwise  = Nothing
 
 parseNumericScoreRange :: AT.Parser NumericScoreRange

@@ -6,7 +6,7 @@ import qualified Data.Vector as V
 
 data IELTSLevel   = L45 | L50 | L55 | L60 | L65 deriving (Eq, Ord)
 type NumericScore = Int
-data LetterScore  = A1 | A1P | A2 | A2P | B1 | B1P | B2 | B2P | C1 | C1P | C2 | C2P deriving (Eq, Ord)
+data LetterScore  = A1 | A1P | A2 | A2P | B1 | B1P | B2 | B2P | C1 | C1P | C2 deriving (Eq, Ord)
 data Target       = NoGOLD | L1 | L2 | L3 | Exception | Alert deriving Eq
 
 data NumericScoreRange = NumericScoreRange NumericScore NumericScore deriving Eq
@@ -46,7 +46,6 @@ instance Show LetterScore where
     show C1  = "C1"
     show C1P = "C1+"
     show C2  = "C2"
-    show C2P = "C2+"
 
 instance Show Target where
     show NoGOLD    = "No GOLD"
