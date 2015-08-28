@@ -1,12 +1,12 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-import Parse
 import Types
+import Parse
 import Data.Text.Encoding (encodeUtf8)
 import qualified Data.ByteString.Internal as BI
-import qualified Data.Vector as V
 import qualified Data.Text as T
+import qualified Data.Vector as V
 import Data.Csv
 
 import Test.QuickCheck
@@ -26,6 +26,9 @@ letterScoreRange = [A1, A1P, A2, A2P, B1, B1P, B2, B2P, C1, C1P, C2]
 
 targetRange :: [Target]
 targetRange = [NoGOLD, L1, L2, L3, Exception, Alert]
+
+magicConstants :: [Int]
+magicConstants = [1, 5, 15, 34, 65]
 
 instance Arbitrary IELTSLevel where
     arbitrary = elements ieltsRange
@@ -53,12 +56,14 @@ newtype IntList = IntList [Int] deriving Show
 
 instance Arbitrary TargetList where
     arbitrary = do
-        xs <- vectorOf (numberOfCsvColumns - targetStartsAtColumn) $ elements targetRange
+        l  <- elements magicConstants
+        xs <- vectorOf l $ elements targetRange
         return $ TargetList xs
 
 instance Arbitrary IntList where
     arbitrary = do
-        xs <- vectorOf (numberOfCsvColumns - targetStartsAtColumn) $ elements numericScoreRange
+        l  <- elements magicConstants
+        xs <- vectorOf l $ elements numericScoreRange
         return $ IntList xs
 
 prop_parseField_IELTSLevel_success :: IELTSLevel -> Bool

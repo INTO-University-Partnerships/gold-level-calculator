@@ -5,16 +5,17 @@ module Parse where
 import Types
 import Control.Monad (mzero)
 import Data.Text.Encoding (decodeUtf8)
-import qualified Data.ByteString.Lazy as BL
-import qualified Data.Vector as V
 import qualified Data.Attoparsec.Text as AT
+import qualified Data.ByteString.Lazy as BL
+import qualified Data.Text as T
+import qualified Data.Vector as V
 import Data.Csv
-
-numberOfCsvColumns :: Int
-numberOfCsvColumns = 41
 
 targetStartsAtColumn :: Int
 targetStartsAtColumn = 7 -- zero-based
+
+dropNullTrailingFields :: Record -> Record
+dropNullTrailingFields = V.reverse . V.dropWhile (\f -> T.null $ decodeUtf8 f) . V.reverse
 
 parseNumericScore :: AT.Parser NumericScore
 parseNumericScore = do
@@ -105,22 +106,26 @@ instance FromField NumericScoreRange where
 
 instance FromRecord ScoreTarget where
     parseRecord v
-        | length v == numberOfCsvColumns = ScoreTarget <$>
-                                           v .! 0      <*>
-                                           parserMultipleColumns v [targetStartsAtColumn..numberOfCsvColumns-1]
+        | l > targetStartsAtColumn = ScoreTarget <$>
+                                     v .! 0      <*>
+                                     parserMultipleColumns v [targetStartsAtColumn..(l-1)]
         | otherwise = mzero
+        where v' = dropNullTrailingFields v
+              l  = length v'
 
 instance FromRecord ScoreGroup where
     parseRecord v
-        | length v == numberOfCsvColumns = ScoreGroup <$>
-                                           v .! 0     <*>
-                                           v .! 1     <*>
-                                           v .! 2     <*>
-                                           v .! 3     <*>
-                                           v .! 4     <*>
-                                           v .! 5     <*>
-                                           parserMultipleColumns v [targetStartsAtColumn..numberOfCsvColumns-1]
+        | l > targetStartsAtColumn = ScoreGroup <$>
+                                     v .! 0     <*>
+                                     v .! 1     <*>
+                                     v .! 2     <*>
+                                     v .! 3     <*>
+                                     v .! 4     <*>
+                                     v .! 5     <*>
+                                     parserMultipleColumns v [targetStartsAtColumn..(l-1)]
         | otherwise = mzero
+        where v' = dropNullTrailingFields v
+              l  = length v'
 
 type Matrix = V.Vector (V.Vector BL.ByteString)
 
