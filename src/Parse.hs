@@ -10,35 +10,10 @@ import qualified Data.Vector as V
 import qualified Data.Attoparsec.Text as AT
 import Data.Csv
 
-instance FromField IELTSLevel where
-    parseField f
-        | f == "4.5" = pure L45
-        | f == "5.0" = pure L50
-        | f == "5.5" = pure L55
-        | f == "6.0" = pure L60
-        | f == "6.5" = pure L65
-        | otherwise  = mzero
-
 parseNumericScore :: AT.Parser NumericScore
 parseNumericScore = do
     n <- AT.decimal
     if n > 100 then mzero else return n
-
-parseNumericScoreRange :: AT.Parser NumericScoreRange
-parseNumericScoreRange = do
-    AT.skipSpace
-    lower <- parseNumericScore
-    AT.skipSpace
-    AT.asciiCI "to"
-    AT.skipSpace
-    upper <- parseNumericScore
-    AT.skipSpace
-    return $ NumericScoreRange lower upper
-
-instance FromField NumericScoreRange where
-    parseField f = case AT.parseOnly (parseNumericScoreRange <* AT.endOfInput) (decodeUtf8 f) of
-        Right r -> pure r
-        Left _  -> mzero
 
 parseLetterScore :: AT.Parser LetterScore
 parseLetterScore = do
@@ -63,6 +38,17 @@ parseLetterScore = do
             | i == "C2+" = Just C2P
             | otherwise  = Nothing
 
+parseNumericScoreRange :: AT.Parser NumericScoreRange
+parseNumericScoreRange = do
+    AT.skipSpace
+    lower <- parseNumericScore
+    AT.skipSpace
+    AT.asciiCI "to"
+    AT.skipSpace
+    upper <- parseNumericScore
+    AT.skipSpace
+    return $ NumericScoreRange lower upper
+
 parseLetterScoreRange :: AT.Parser LetterScoreRange
 parseLetterScoreRange = do
     AT.skipSpace
@@ -74,10 +60,14 @@ parseLetterScoreRange = do
     AT.skipSpace
     return $ LetterScoreRange lower upper
 
-instance FromField LetterScoreRange where
-    parseField f = case AT.parseOnly (parseLetterScoreRange <* AT.endOfInput) (decodeUtf8 f) of
-        Right r -> pure r
-        Left _  -> mzero
+instance FromField IELTSLevel where
+    parseField f
+        | f == "4.5" = pure L45
+        | f == "5.0" = pure L50
+        | f == "5.5" = pure L55
+        | f == "6.0" = pure L60
+        | f == "6.5" = pure L65
+        | otherwise  = mzero
 
 instance FromField Target where
     parseField f
@@ -88,6 +78,16 @@ instance FromField Target where
         | f == "X"       = pure Exception
         | f == "Alert"   = pure Alert
         | otherwise      = mzero
+
+instance FromField LetterScoreRange where
+    parseField f = case AT.parseOnly (parseLetterScoreRange <* AT.endOfInput) (decodeUtf8 f) of
+        Right r -> pure r
+        Left _  -> mzero
+
+instance FromField NumericScoreRange where
+    parseField f = case AT.parseOnly (parseNumericScoreRange <* AT.endOfInput) (decodeUtf8 f) of
+        Right r -> pure r
+        Left _  -> mzero
 
 type Matrix = V.Vector (V.Vector BL.ByteString)
 
