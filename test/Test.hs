@@ -10,11 +10,13 @@ import qualified Data.Text as T
 import Data.Csv
 
 import Test.QuickCheck
-import Test.QuickCheck.Modifiers
 import Test.QuickCheck.All
 
 utf8EncodedFieldData :: Show a => a -> BI.ByteString
 utf8EncodedFieldData d = encodeUtf8 $ T.pack $ show d
+
+ieltsRange :: [IELTSLevel]
+ieltsRange = [L45, L50, L55, L60, L65]
 
 numericScoreRange :: [Int]
 numericScoreRange = [0..100]
@@ -22,8 +24,11 @@ numericScoreRange = [0..100]
 letterScoreRange :: [LetterScore]
 letterScoreRange = [A1, A1P, A2, A2P, B1, B1P, B2, B2P, C1, C1P, C2]
 
+targetRange :: [Target]
+targetRange = [NoGOLD, L1, L2, L3, Exception, Alert]
+
 instance Arbitrary IELTSLevel where
-    arbitrary = elements [L45, L50, L55, L60, L65]
+    arbitrary = elements ieltsRange
 
 instance Arbitrary LetterScore where
     arbitrary = elements letterScoreRange
@@ -41,14 +46,14 @@ instance Arbitrary LetterScoreRange where
         return $ LetterScoreRange lower upper
 
 instance Arbitrary Target where
-    arbitrary = elements [NoGOLD, L1, L2, L3, Exception, Alert]
+    arbitrary = elements targetRange
 
 newtype TargetList = TargetList [Target] deriving Show
 newtype IntList = IntList [Int] deriving Show
 
 instance Arbitrary TargetList where
     arbitrary = do
-        xs <- vectorOf (numberOfCsvColumns - targetStartsAtColumn) $ elements [NoGOLD, L1, L2, L3, Exception, Alert]
+        xs <- vectorOf (numberOfCsvColumns - targetStartsAtColumn) $ elements targetRange
         return $ TargetList xs
 
 instance Arbitrary IntList where
@@ -68,12 +73,12 @@ prop_parseField_IELTSLevel_fail l = l /= show l ==>
         Right _ -> False
         Left  _ -> True
 
-prop_parseField_NumericScoreRange_success :: Positive Int -> Positive Int -> Property
-prop_parseField_NumericScoreRange_success (Positive lower) (Positive upper) = lower <= 100 && upper <= 100 ==>
+prop_parseField_NumericScoreRange_success :: NumericScoreRange -> Bool
+prop_parseField_NumericScoreRange_success nsr@(NumericScoreRange lower upper) =
     case runParser (parseField (encodeUtf8 $ T.pack f) :: Parser NumericScoreRange) of
         Right (NumericScoreRange lower' upper') -> lower' == lower && upper' == upper
         Left _ -> False
-    where f = show lower ++ " to " ++ show upper
+    where f = show nsr
 
 prop_parseField_NumericScoreRange_fail :: String -> Bool
 prop_parseField_NumericScoreRange_fail f =
@@ -81,12 +86,12 @@ prop_parseField_NumericScoreRange_fail f =
         Right _ -> False
         Left  _ -> True
 
-prop_parseField_LetterScoreRange_success :: LetterScore -> LetterScore -> Bool
-prop_parseField_LetterScoreRange_success lower upper =
+prop_parseField_LetterScoreRange_success :: LetterScoreRange -> Bool
+prop_parseField_LetterScoreRange_success lsr@(LetterScoreRange lower upper) =
     case runParser (parseField (encodeUtf8 $ T.pack f) :: Parser LetterScoreRange) of
         Right (LetterScoreRange lower' upper') -> lower' == lower && upper' == upper
         Left _ -> False
-    where f = show lower ++ " to " ++ show upper
+    where f = show lsr
 
 prop_parseField_LetterScoreRange_fail :: String -> Bool
 prop_parseField_LetterScoreRange_fail f =
