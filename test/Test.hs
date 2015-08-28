@@ -35,15 +35,15 @@ instance Arbitrary LetterScore where
 
 instance Arbitrary NumericScoreRange where
     arbitrary = do
-        lower <- elements numericScoreRange
-        upper <- elements numericScoreRange
-        return $ NumericScoreRange lower upper
+        s1 <- elements numericScoreRange
+        s2 <- elements numericScoreRange
+        return $ NumericScoreRange (min s1 s2) (max s1 s2)
 
 instance Arbitrary LetterScoreRange where
     arbitrary = do
-        lower <- elements letterScoreRange
-        upper <- elements letterScoreRange
-        return $ LetterScoreRange lower upper
+        s1 <- elements letterScoreRange
+        s2 <- elements letterScoreRange
+        return $ LetterScoreRange (min s1 s2) (max s1 s2)
 
 instance Arbitrary Target where
     arbitrary = elements targetRange

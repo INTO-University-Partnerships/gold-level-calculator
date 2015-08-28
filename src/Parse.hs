@@ -52,7 +52,9 @@ parseNumericScoreRange = do
     AT.skipSpace
     upper <- parseNumericScore
     AT.skipSpace
-    return $ NumericScoreRange lower upper
+    case compare lower upper of
+        GT -> mzero
+        _  -> return $ NumericScoreRange lower upper
 
 parseLetterScoreRange :: AT.Parser LetterScoreRange
 parseLetterScoreRange = do
@@ -63,7 +65,9 @@ parseLetterScoreRange = do
     AT.skipSpace
     upper <- parseLetterScore
     AT.skipSpace
-    return $ LetterScoreRange lower upper
+    case compare lower upper of
+        GT -> mzero
+        _  -> return $ LetterScoreRange lower upper
 
 parserMultipleColumns :: FromField a => Record -> [Int] -> Parser (V.Vector a)
 parserMultipleColumns v xs = do
