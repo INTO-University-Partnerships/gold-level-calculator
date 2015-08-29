@@ -2,15 +2,19 @@
 
 module Types where
 
+import qualified Data.Map as M
 import qualified Data.Vector as V
 
 data IELTSLevel   = L45 | L50 | L55 | L60 | L65 deriving (Eq, Ord)
+type GroupName    = String
 type NumericScore = Int
 data LetterScore  = A1 | A1P | A2 | A2P | B1 | B1P | B2 | B2P | C1 | C1P | C2 deriving (Eq, Ord)
 data Target       = NoGOLD | L1 | L2 | L3 | Exception | Alert deriving Eq
 
 data NumericScoreRange = NumericScoreRange NumericScore NumericScore deriving Eq
 data LetterScoreRange  = LetterScoreRange  LetterScore  LetterScore  deriving Eq
+
+newtype DefaultToZero = DefaultToZero Int deriving Eq
 
 data ScoreTarget = ScoreTarget {
     scoreTargetlevel :: IELTSLevel,
@@ -19,13 +23,22 @@ data ScoreTarget = ScoreTarget {
 
 data ScoreGroup = ScoreGroup {
     scoreGrouplevel     :: IELTSLevel,
-    scoreGroupName      :: String,
+    scoreGroupName      :: GroupName,
     listeningScoreRange :: NumericScoreRange,
     readingScoreRange   :: NumericScoreRange,
     writingScoreRange   :: LetterScoreRange,
     speakingScoreRange  :: LetterScoreRange,
-    matchCount          :: V.Vector Int
+    counts              :: V.Vector DefaultToZero
 } deriving Show
+
+type ScoreGroupMap = M.Map GroupName ScoreGroup
+
+data IELTSLevelData = IELTSLevelData {
+    scoreTarget :: ScoreTarget,
+    scoreGroups :: ScoreGroupMap
+} deriving Show
+
+type IELTSLevelDataMap = M.Map IELTSLevel IELTSLevelData
 
 instance Show IELTSLevel where
     show L45 = "4.5"
@@ -60,3 +73,7 @@ instance Show NumericScoreRange where
 
 instance Show LetterScoreRange where
     show (LetterScoreRange lower upper) = show lower ++ " to " ++ show upper
+
+instance Show DefaultToZero where
+    show (DefaultToZero 0) = ""
+    show (DefaultToZero n) = show n

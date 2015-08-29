@@ -13,7 +13,7 @@ import Test.QuickCheck
 import Test.QuickCheck.All
 
 utf8EncodedFieldData :: Show a => a -> BI.ByteString
-utf8EncodedFieldData d = encodeUtf8 $ T.pack $ show d
+utf8EncodedFieldData = encodeUtf8 . T.pack . show
 
 ieltsRange :: [IELTSLevel]
 ieltsRange = [L45, L50, L55, L60, L65]
@@ -52,7 +52,7 @@ instance Arbitrary Target where
     arbitrary = elements targetRange
 
 newtype TargetList = TargetList [Target] deriving Show
-newtype IntList = IntList [Int] deriving Show
+newtype DefaultToZeroList = DefaultToZeroList [DefaultToZero] deriving Show
 
 instance Arbitrary TargetList where
     arbitrary = do
@@ -60,11 +60,12 @@ instance Arbitrary TargetList where
         xs <- vectorOf l $ elements targetRange
         return $ TargetList xs
 
-instance Arbitrary IntList where
+instance Arbitrary DefaultToZeroList where
     arbitrary = do
         l  <- elements magicConstants
-        xs <- vectorOf l $ elements numericScoreRange
-        return $ IntList xs
+        xs <- vectorOf (l-1) $ elements $ map DefaultToZero [0..4]
+        y  <- elements $ map DefaultToZero [1..4]
+        return $ DefaultToZeroList $ xs ++ [y]
 
 prop_parseField_IELTSLevel_success :: IELTSLevel -> Bool
 prop_parseField_IELTSLevel_success l =
@@ -144,12 +145,12 @@ prop_parseRecord_ScoreTarget_fail xs =
         Left  _ -> True
     where r = V.fromList $ map (encodeUtf8 . T.pack) $ xs
 
-prop_parseRecord_ScoreGroup_success :: IELTSLevel -> String -> NumericScoreRange -> NumericScoreRange -> LetterScoreRange -> LetterScoreRange -> IntList -> Property
-prop_parseRecord_ScoreGroup_success l n ls rs ws ss (IntList ms) = (not . null) n ==>
+prop_parseRecord_ScoreGroup_success :: IELTSLevel -> String -> NumericScoreRange -> NumericScoreRange -> LetterScoreRange -> LetterScoreRange -> DefaultToZeroList -> Property
+prop_parseRecord_ScoreGroup_success l n ls rs ws ss (DefaultToZeroList cs) = (not . null) n ==>
     case runParser (parseRecord r :: Parser ScoreGroup) of
-        Right (ScoreGroup l' n' ls' rs' ws' ss' v) -> l' == l && n' == n && ls' == ls && rs' == rs && ws' == ws && ss' == ss && V.toList v == ms
+        Right (ScoreGroup l' n' ls' rs' ws' ss' v) -> l' == l && n' == n && ls' == ls && rs' == rs && ws' == ws && ss' == ss && V.toList v == cs
         Left _ -> False
-    where r = V.fromList $ map (encodeUtf8 . T.pack) $ [show l, n, show ls, show rs, show ws, show ss, ""] ++ map show ms
+    where r = V.fromList $ map (encodeUtf8 . T.pack) $ [show l, n, show ls, show rs, show ws, show ss, ""] ++ map show cs
 
 prop_parseRecord_ScoreGroup_fail :: [String] -> Bool
 prop_parseRecord_ScoreGroup_fail xs =

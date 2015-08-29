@@ -10,6 +10,5 @@ main :: IO ()
 main = do
     csvData <- BL.readFile "data/GOLD levels.csv"
     case parseWholeFile csvData of
-        Left err -> putStrLn err
-        Right v  -> V.forM_ v $ \r ->
-            putStrLn $ show r
+        Left  e -> putStrLn e
+        Right m -> parseMatrix m

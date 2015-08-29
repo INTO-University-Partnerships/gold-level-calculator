@@ -11,8 +11,10 @@ import qualified Data.Text as T
 import qualified Data.Vector as V
 import Data.Csv
 
-targetStartsAtColumn :: Int
-targetStartsAtColumn = 7 -- zero-based
+type Matrix = V.Vector (V.Vector BL.ByteString)
+
+targetsStartAtColumn :: Int
+targetsStartAtColumn = 7 -- zero-based
 
 dropNullTrailingFields :: Record -> Record
 dropNullTrailingFields = V.reverse . V.dropWhile (\f -> T.null $ decodeUtf8 f) . V.reverse
@@ -75,6 +77,11 @@ parseMultipleColumns v xs = do
     ms <- mapM (index v) xs
     pure (V.fromList ms)
 
+instance FromField DefaultToZero where
+    parseField f = case runParser (parseField f) of
+        Left  e -> pure $ DefaultToZero 0
+        Right n -> pure $ DefaultToZero n
+
 instance FromField IELTSLevel where
     parseField f
         | f == "4.5" = pure L45
@@ -106,28 +113,42 @@ instance FromField NumericScoreRange where
 
 instance FromRecord ScoreTarget where
     parseRecord v
-        | l > targetStartsAtColumn = ScoreTarget <$>
+        | l > targetsStartAtColumn = ScoreTarget <$>
                                      v .! 0      <*>
-                                     parseMultipleColumns v [targetStartsAtColumn..(l-1)]
+                                     parseMultipleColumns v [targetsStartAtColumn..(l-1)]
         | otherwise = mzero
         where v' = dropNullTrailingFields v
               l  = length v'
 
 instance FromRecord ScoreGroup where
     parseRecord v
-        | l > targetStartsAtColumn = ScoreGroup <$>
+        | l > targetsStartAtColumn = ScoreGroup <$>
                                      v .! 0     <*>
                                      v .! 1     <*>
                                      v .! 2     <*>
                                      v .! 3     <*>
                                      v .! 4     <*>
                                      v .! 5     <*>
-                                     parseMultipleColumns v [targetStartsAtColumn..(l-1)]
+                                     parseMultipleColumns v [targetsStartAtColumn..(l-1)]
         | otherwise = mzero
         where v' = dropNullTrailingFields v
               l  = length v'
 
-type Matrix = V.Vector (V.Vector BL.ByteString)
-
 parseWholeFile :: BL.ByteString -> Either String Matrix
 parseWholeFile csvData = decode NoHeader csvData
+
+parseMatrix :: Matrix -> IO ()
+parseMatrix m = do
+    let m' = V.filter (\v -> not $ V.null v || BL.null (v V.! 0)) m
+    let potentialScoreTargets = V.filter (\v -> BL.null (v V.! 1)) m'
+    V.forM_ potentialScoreTargets $ \r -> do
+        let r' = V.map BL.toStrict r
+        case runParser (parseRecord r' :: Parser ScoreTarget) of
+            Right st -> putStrLn $ show st
+            Left  e  -> putStrLn e
+    let potentialScoreGroups = V.filter (\v -> not $ BL.null (v V.! 1)) m'
+    V.forM_ potentialScoreGroups $ \r -> do
+        let r' = V.map BL.toStrict r
+        case runParser (parseRecord r' :: Parser ScoreGroup) of
+            Right sg -> putStrLn $ show sg
+            Left  e  -> putStrLn e
