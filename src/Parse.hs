@@ -70,8 +70,8 @@ parseLetterScoreRange = do
         GT -> mzero
         _  -> return $ LetterScoreRange lower upper
 
-parserMultipleColumns :: FromField a => Record -> [Int] -> Parser (V.Vector a)
-parserMultipleColumns v xs = do
+parseMultipleColumns :: FromField a => Record -> [Int] -> Parser (V.Vector a)
+parseMultipleColumns v xs = do
     ms <- mapM (index v) xs
     pure (V.fromList ms)
 
@@ -108,7 +108,7 @@ instance FromRecord ScoreTarget where
     parseRecord v
         | l > targetStartsAtColumn = ScoreTarget <$>
                                      v .! 0      <*>
-                                     parserMultipleColumns v [targetStartsAtColumn..(l-1)]
+                                     parseMultipleColumns v [targetStartsAtColumn..(l-1)]
         | otherwise = mzero
         where v' = dropNullTrailingFields v
               l  = length v'
@@ -122,7 +122,7 @@ instance FromRecord ScoreGroup where
                                      v .! 3     <*>
                                      v .! 4     <*>
                                      v .! 5     <*>
-                                     parserMultipleColumns v [targetStartsAtColumn..(l-1)]
+                                     parseMultipleColumns v [targetStartsAtColumn..(l-1)]
         | otherwise = mzero
         where v' = dropNullTrailingFields v
               l  = length v'

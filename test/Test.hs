@@ -85,6 +85,13 @@ prop_parseField_NumericScoreRange_success nsr@(NumericScoreRange lower upper) =
         Left _ -> False
     where f = show nsr
 
+prop_parseField_NumericScoreRange_lower_gt_upper_fail :: NumericScoreRange -> Property
+prop_parseField_NumericScoreRange_lower_gt_upper_fail nsr@(NumericScoreRange lower upper) = upper > lower ==>
+    case runParser (parseField (encodeUtf8 $ T.pack f) :: Parser NumericScoreRange) of
+        Right _ -> False
+        Left  _ -> True
+    where f = show $ NumericScoreRange upper lower
+
 prop_parseField_NumericScoreRange_fail :: String -> Bool
 prop_parseField_NumericScoreRange_fail f =
     case runParser (parseField (encodeUtf8 $ T.pack f) :: Parser NumericScoreRange) of
@@ -97,6 +104,13 @@ prop_parseField_LetterScoreRange_success lsr@(LetterScoreRange lower upper) =
         Right (LetterScoreRange lower' upper') -> lower' == lower && upper' == upper
         Left _ -> False
     where f = show lsr
+
+prop_parseField_LetterScoreRange_lower_gt_upper_fail :: LetterScoreRange -> Property
+prop_parseField_LetterScoreRange_lower_gt_upper_fail lsr@(LetterScoreRange lower upper) = upper > lower ==>
+    case runParser (parseField (encodeUtf8 $ T.pack f) :: Parser LetterScoreRange) of
+        Right _ -> False
+        Left  _ -> True
+    where f = show $ LetterScoreRange upper lower
 
 prop_parseField_LetterScoreRange_fail :: String -> Bool
 prop_parseField_LetterScoreRange_fail f =
