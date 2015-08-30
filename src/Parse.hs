@@ -16,9 +16,6 @@ type Matrix = V.Vector (V.Vector BL.ByteString)
 targetsStartAtColumn :: Int
 targetsStartAtColumn = 7 -- zero-based
 
-dropNullTrailingFields :: Record -> Record
-dropNullTrailingFields = V.reverse . V.dropWhile (\f -> T.null $ decodeUtf8 f) . V.reverse
-
 parseNumericScore :: AT.Parser NumericScore
 parseNumericScore = do
     n <- AT.decimal
@@ -117,8 +114,7 @@ instance FromRecord ScoreTarget where
                                      v .! 0      <*>
                                      parseMultipleColumns v [targetsStartAtColumn..(l-1)]
         | otherwise = mzero
-        where v' = dropNullTrailingFields v
-              l  = length v'
+        where l = length v
 
 instance FromRecord ScoreGroup where
     parseRecord v
@@ -131,8 +127,7 @@ instance FromRecord ScoreGroup where
                                      v .! 5     <*>
                                      parseMultipleColumns v [targetsStartAtColumn..(l-1)]
         | otherwise = mzero
-        where v' = dropNullTrailingFields v
-              l  = length v'
+        where l = length v
 
 parseWholeFile :: BL.ByteString -> Either String Matrix
 parseWholeFile csvData = decode NoHeader csvData
@@ -140,15 +135,17 @@ parseWholeFile csvData = decode NoHeader csvData
 parseMatrix :: Matrix -> IO ()
 parseMatrix m = do
     let m' = V.filter (\v -> not $ V.null v || BL.null (v V.! 0)) m
+
     let potentialScoreTargets = V.filter (\v -> BL.null (v V.! 1)) m'
     V.forM_ potentialScoreTargets $ \r -> do
         let r' = V.map BL.toStrict r
         case runParser (parseRecord r' :: Parser ScoreTarget) of
-            Right st -> putStrLn $ show st
+            Right st -> putStrLn $ show st ++ " (" ++ show (V.length $ targets st) ++ ")"
             Left  e  -> putStrLn e
+
     let potentialScoreGroups = V.filter (\v -> not $ BL.null (v V.! 1)) m'
     V.forM_ potentialScoreGroups $ \r -> do
         let r' = V.map BL.toStrict r
         case runParser (parseRecord r' :: Parser ScoreGroup) of
-            Right sg -> putStrLn $ show sg
+            Right sg -> putStrLn $ show sg ++ " (" ++ show (V.length $ counts sg) ++ ")"
             Left  e  -> putStrLn e

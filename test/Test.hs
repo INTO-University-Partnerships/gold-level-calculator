@@ -62,10 +62,9 @@ instance Arbitrary TargetList where
 
 instance Arbitrary DefaultToZeroList where
     arbitrary = do
-        l  <- elements magicConstants
-        xs <- vectorOf (l-1) $ elements $ map DefaultToZero [0..4]
-        y  <- elements $ map DefaultToZero [1..4]
-        return $ DefaultToZeroList $ xs ++ [y]
+        let l = last magicConstants
+        xs <- vectorOf l $ elements $ map DefaultToZero [0..4]
+        return $ DefaultToZeroList xs
 
 prop_parseField_IELTSLevel_success :: IELTSLevel -> Bool
 prop_parseField_IELTSLevel_success l =
