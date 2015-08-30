@@ -4,12 +4,14 @@ module Parse where
 
 import Types
 import Control.Monad (mzero)
+import Data.Csv (Parser, FromField, parseField, Record, FromRecord, parseRecord, runParser, index, (.!))
 import Data.Text.Encoding (decodeUtf8)
+
 import qualified Data.Attoparsec.Text as AT
 import qualified Data.ByteString.Lazy as BL
+import qualified Data.Map.Strict as M
 import qualified Data.Text as T
 import qualified Data.Vector as V
-import Data.Csv
 
 type Matrix = V.Vector (V.Vector BL.ByteString)
 
@@ -96,6 +98,7 @@ instance FromField Target where
         | f == "L3"      = pure L3
         | f == "X"       = pure Exception
         | f == "Alert"   = pure Alert
+        | f == ""        = pure Blank
         | otherwise      = mzero
 
 instance FromField LetterScoreRange where
@@ -129,23 +132,22 @@ instance FromRecord ScoreGroup where
         | otherwise = mzero
         where l = length v
 
-parseWholeFile :: BL.ByteString -> Either String Matrix
-parseWholeFile csvData = decode NoHeader csvData
+parseMatrix :: Matrix -> (Either String (V.Vector ScoreTarget), Either String (V.Vector ScoreGroup))
+parseMatrix m                   = (scoreTargets, scoreGroups)
+    where m'                    = V.filter (\v -> not $ V.null v || BL.null (v V.! 0)) m
+          bytesToVector bs      = runParser (parseRecord $ V.map BL.toStrict bs)
+          potentialScoreTargets = V.filter (\v -> BL.null (v V.! 1)) m'
+          scoreTargets          = V.mapM bytesToVector potentialScoreTargets :: Either String (V.Vector ScoreTarget)
+          potentialScoreGroups  = V.filter (\v -> not $ BL.null (v V.! 1)) m'
+          scoreGroups           = V.mapM bytesToVector potentialScoreGroups :: Either String (V.Vector ScoreGroup)
 
-parseMatrix :: Matrix -> IO ()
-parseMatrix m = do
-    let m' = V.filter (\v -> not $ V.null v || BL.null (v V.! 0)) m
+getScoreGroupMap :: IELTSLevel -> V.Vector ScoreGroup -> ScoreGroupMap
+getScoreGroupMap l v = M.fromList $ V.toList v'
+    where v' = V.map (\sg -> (scoreGroupName sg, sg)) $ V.filter (\sg -> scoreGroupLevel sg == l) v
 
-    let potentialScoreTargets = V.filter (\v -> BL.null (v V.! 1)) m'
-    V.forM_ potentialScoreTargets $ \r -> do
-        let r' = V.map BL.toStrict r
-        case runParser (parseRecord r' :: Parser ScoreTarget) of
-            Right st -> putStrLn $ show st ++ " (" ++ show (V.length $ targets st) ++ ")"
-            Left  e  -> putStrLn e
+getIELTSLevelData :: IELTSLevel -> V.Vector ScoreTarget -> V.Vector ScoreGroup -> IELTSLevelData
+getIELTSLevelData l vst vsg = IELTSLevelData (V.head $ V.filter (\st -> scoreTargetLevel st == l) vst) (getScoreGroupMap l vsg)
 
-    let potentialScoreGroups = V.filter (\v -> not $ BL.null (v V.! 1)) m'
-    V.forM_ potentialScoreGroups $ \r -> do
-        let r' = V.map BL.toStrict r
-        case runParser (parseRecord r' :: Parser ScoreGroup) of
-            Right sg -> putStrLn $ show sg ++ " (" ++ show (V.length $ counts sg) ++ ")"
-            Left  e  -> putStrLn e
+toIELTSLevelDataMap :: V.Vector ScoreTarget -> V.Vector ScoreGroup -> IELTSLevelDataMap
+toIELTSLevelDataMap vst vsg = M.fromList $ V.toList v
+    where v = V.map (\st -> let stl = scoreTargetLevel st in (stl, getIELTSLevelData stl vst vsg)) vst

@@ -3,11 +3,13 @@
 
 import Types
 import Parse
+
+import Data.Csv (Parser, parseField, parseRecord, runParser)
 import Data.Text.Encoding (encodeUtf8)
+
 import qualified Data.ByteString.Internal as BI
 import qualified Data.Text as T
 import qualified Data.Vector as V
-import Data.Csv
 
 import Test.QuickCheck
 import Test.QuickCheck.All
@@ -25,7 +27,7 @@ letterScoreRange :: [LetterScore]
 letterScoreRange = [A1, A1P, A2, A2P, B1, B1P, B2, B2P, C1, C1P, C2]
 
 targetRange :: [Target]
-targetRange = [NoGOLD, L1, L2, L3, Exception, Alert]
+targetRange = [NoGOLD, L1, L2, L3, Exception, Alert, Blank]
 
 magicConstants :: [Int]
 magicConstants = [1, 5, 15, 34, 65]
