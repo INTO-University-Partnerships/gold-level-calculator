@@ -1,37 +1,39 @@
-name:                gold-level-calculator
-version:             0.1.0.0
-build-type:          Simple
-cabal-version:       >=1.10
+name:               gold-level-calculator
+version:            0.1.0.0
+build-type:         Simple
+cabal-version:      >=1.10
 
 executable gold-level-calculator
-  main-is:             Main.hs
-  hs-source-dirs:      src/
-  other-modules:       Main,
-                       Types,
-                       Parse
-  other-extensions:    OverloadedStrings
-  build-depends:       base,
-                       bytestring,
-                       text,
-                       vector,
-                       containers,
-                       cassava,
-                       attoparsec
-  default-language:    Haskell2010
+  main-is:          Main.hs
+  hs-source-dirs:   src/
+  other-modules:    Main,
+                    Types,
+                    Parse,
+                    Calc
+  other-extensions: OverloadedStrings
+  build-depends:    base,
+                    bytestring,
+                    text,
+                    vector,
+                    containers,
+                    cassava,
+                    attoparsec
+  default-language: Haskell2010
 
 test-suite gold-level-calculator-test
-  type:                exitcode-stdio-1.0
-  main-is:             Test.hs
-  hs-source-dirs:      test/,
-                       src/
-  other-modules:       Types,
-                       Parse
-  build-depends:       base,
-                       bytestring,
-                       text,
-                       vector,
-                       containers,
-                       cassava,
-                       attoparsec,
-                       QuickCheck
-  default-language:    Haskell2010
+  type:             exitcode-stdio-1.0
+  main-is:          Test.hs
+  hs-source-dirs:   test/,
+                    src/
+  other-modules:    Types,
+                    Parse,
+                    Calc
+  build-depends:    base,
+                    bytestring,
+                    text,
+                    vector,
+                    containers,
+                    cassava,
+                    attoparsec,
+                    QuickCheck
+  default-language: Haskell2010

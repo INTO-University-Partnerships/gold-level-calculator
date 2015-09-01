@@ -11,7 +11,8 @@ import qualified Data.ByteString.Lazy as BL
 import qualified Data.Map.Strict as M
 import qualified Data.Vector as V
 
-processMatrix :: (Either String (V.Vector ScoreTarget), Either String (V.Vector ScoreGroup)) -> IO (V.Vector ScoreTarget, V.Vector ScoreGroup)
+processMatrix :: (Either String (V.Vector ScoreTarget), Either String (V.Vector ScoreGroup))
+                 -> IO (V.Vector ScoreTarget, V.Vector ScoreGroup)
 processMatrix eithers = do
     case fst eithers of
         Left  evst -> showErrorAndReturnEmptyVectors evst

@@ -6,6 +6,10 @@ module Types (
     NumericScore,
     LetterScore(..),
     Target(..),
+    ListeningScore,
+    ReadingScore,
+    WritingScore,
+    SpeakingScore,
     NumericScoreRange(..),
     LetterScoreRange(..),
     DefaultToZero(..),
@@ -24,6 +28,11 @@ type GroupName    = String
 type NumericScore = Int
 data LetterScore  = A1 | A1P | A2 | A2P | B1 | B1P | B2 | B2P | C1 | C1P | C2 deriving (Eq, Ord)
 data Target       = NoGOLD | L1 | L2 | L3 | Exception | Alert | Blank deriving Eq
+
+type ListeningScore = NumericScore
+type ReadingScore   = NumericScore
+type WritingScore   = LetterScore
+type SpeakingScore  = LetterScore
 
 data NumericScoreRange = NumericScoreRange NumericScore NumericScore deriving Eq
 data LetterScoreRange  = LetterScoreRange  LetterScore  LetterScore  deriving Eq
