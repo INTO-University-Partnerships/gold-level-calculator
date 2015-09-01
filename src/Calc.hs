@@ -14,7 +14,6 @@ import Types (
     NumericScoreRange(..),
     LetterScoreRange(..),
     ScoreGroup(..),
-    Target(..),
     IELTSLevelData(..),
     IELTSLevelDataMap
     )

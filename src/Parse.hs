@@ -13,7 +13,6 @@ import Data.Text.Encoding (decodeUtf8)
 import qualified Data.Attoparsec.Text as AT
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Map.Strict as M
-import qualified Data.Text as T
 import qualified Data.Vector as V
 
 type Matrix = V.Vector (V.Vector BL.ByteString)
