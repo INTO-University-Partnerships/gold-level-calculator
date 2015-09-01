@@ -3,6 +3,7 @@
 import Types
 import Parse
 import Calc
+import IOActions (getIELTSLevelDataMap)
 
 import Data.Csv (Parser, parseField, parseRecord, runParser)
 import Data.Text.Encoding (encodeUtf8)
@@ -15,6 +16,7 @@ import qualified Data.Vector as V
 
 import Test.QuickCheck
 import Test.QuickCheck.All
+import Test.QuickCheck.Monadic
 
 {--}
 
@@ -35,14 +37,6 @@ targetRange = [NoGOLD, L1, L2, L3, Exception, Alert, Blank]
 
 magicConstants :: [Int]
 magicConstants = [1, 5, 15, 34, 65]
-
-scoreGroupsL65 :: ScoreGroupMap
-scoreGroupsL65 = M.fromList [
-    ("Over",      ScoreGroup L65 "Over"      (NumericScoreRange  76 100) (NumericScoreRange  76 100) (LetterScoreRange  C1  C2) (LetterScoreRange  C1  C2) V.empty),
-    ("Threshold", ScoreGroup L65 "Threshold" (NumericScoreRange  67  75) (NumericScoreRange  67  75) (LetterScoreRange B2P B2P) (LetterScoreRange B2P B2P) V.empty),
-    ("Middle",    ScoreGroup L65 "Middle"    (NumericScoreRange  60  66) (NumericScoreRange  60  66) (LetterScoreRange  B2  B2) (LetterScoreRange  B2  B2) V.empty),
-    ("Deep",      ScoreGroup L65 "Deep"      (NumericScoreRange   0  59) (NumericScoreRange   0  59) (LetterScoreRange  A1 B1P) (LetterScoreRange  A1 B1P) V.empty)
-    ]
 
 {--}
 
@@ -196,19 +190,21 @@ prop_calcScoreTallysReturnsNothingIfIELTSLevelNotFound :: IELTSLevel -> NumericS
 prop_calcScoreTallysReturnsNothingIfIELTSLevelNotFound l (NumericScoreWrapper ls) (NumericScoreWrapper rs) ws ss =
     calcScoreTallys M.empty l ls rs ws ss == Nothing
 
-prop_calcScoreTallysLengthEqualsScoreGroupLength :: NumericScoreWrapper -> NumericScoreWrapper -> LetterScore -> LetterScore -> Bool
-prop_calcScoreTallysLengthEqualsScoreGroupLength (NumericScoreWrapper ls) (NumericScoreWrapper rs) ws ss =
-    M.size (fromJust result) == M.size scoreGroupsL65
-    where ieltsLevelData    = IELTSLevelData (ScoreTarget L65 V.empty) scoreGroupsL65
-          ieltsLevelDataMap = M.insert L65 ieltsLevelData M.empty
-          result            = calcScoreTallys ieltsLevelDataMap L65 ls rs ws ss
+prop_calcScoreTallysLengthEqualsScoreGroupLength :: IELTSLevel -> NumericScoreWrapper -> NumericScoreWrapper -> LetterScore -> LetterScore -> Property
+prop_calcScoreTallysLengthEqualsScoreGroupLength l (NumericScoreWrapper ls) (NumericScoreWrapper rs) ws ss = monadicIO $ do
+    ieltsLevelDataMap <- run $ getIELTSLevelDataMap
+    let ieltsLevelDataMap' = fromJust ieltsLevelDataMap
+    let ieltsLevelData     = fromJust $ M.lookup l ieltsLevelDataMap'
+    case calcScoreTallys ieltsLevelDataMap' l ls rs ws ss of
+        Nothing     -> assert False
+        Just result -> assert $ M.size result == M.size (scoreGroups ieltsLevelData)
 
-prop_calcScoreTallysSumsToScoreGroupLength :: NumericScoreWrapper -> NumericScoreWrapper -> LetterScore -> LetterScore -> Bool
-prop_calcScoreTallysSumsToScoreGroupLength (NumericScoreWrapper ls) (NumericScoreWrapper rs) ws ss =
-    M.foldr (\n acc -> n + acc) 0 (fromJust result) == M.size scoreGroupsL65
-    where ieltsLevelData    = IELTSLevelData (ScoreTarget L65 V.empty) scoreGroupsL65
-          ieltsLevelDataMap = M.insert L65 ieltsLevelData M.empty
-          result            = calcScoreTallys ieltsLevelDataMap L65 ls rs ws ss
+prop_calcScoreTallysSumsToFour :: IELTSLevel -> NumericScoreWrapper -> NumericScoreWrapper -> LetterScore -> LetterScore -> Property
+prop_calcScoreTallysSumsToFour l (NumericScoreWrapper ls) (NumericScoreWrapper rs) ws ss = monadicIO $ do
+    ieltsLevelDataMap <- run $ getIELTSLevelDataMap
+    case calcScoreTallys (fromJust ieltsLevelDataMap) l ls rs ws ss of
+        Nothing     -> assert False
+        Just result -> assert $ M.foldr (\n acc -> n + acc) 0 result == 4 -- listening, reading, writing, speaking
 
 {--}
 

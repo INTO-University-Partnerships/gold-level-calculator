@@ -9,7 +9,8 @@ executable gold-level-calculator
   other-modules:    Main,
                     Types,
                     Parse,
-                    Calc
+                    Calc,
+                    IOActions
   other-extensions: OverloadedStrings
   build-depends:    base,
                     bytestring,
@@ -27,7 +28,8 @@ test-suite gold-level-calculator-test
                     src/
   other-modules:    Types,
                     Parse,
-                    Calc
+                    Calc,
+                    IOActions
   build-depends:    base,
                     bytestring,
                     text,
