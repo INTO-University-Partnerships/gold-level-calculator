@@ -1,6 +1,20 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Types where
+module Types (
+    IELTSLevel(..),
+    GroupName,
+    NumericScore,
+    LetterScore(..),
+    Target(..),
+    NumericScoreRange(..),
+    LetterScoreRange(..),
+    DefaultToZero(..),
+    ScoreTarget(..),
+    ScoreGroup(..),
+    ScoreGroupMap,
+    IELTSLevelData(..),
+    IELTSLevelDataMap
+) where
 
 import qualified Data.Map.Strict as M
 import qualified Data.Vector as V

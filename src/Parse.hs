@@ -1,6 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Parse where
+module Parse (
+    parseMatrix,
+    toIELTSLevelDataMap
+) where
 
 import Types
 import Control.Monad (mzero)

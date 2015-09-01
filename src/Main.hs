@@ -11,8 +11,8 @@ import qualified Data.ByteString.Lazy as BL
 import qualified Data.Map.Strict as M
 import qualified Data.Vector as V
 
-removeEither :: (Either String (V.Vector ScoreTarget), Either String (V.Vector ScoreGroup)) -> IO (V.Vector ScoreTarget, V.Vector ScoreGroup)
-removeEither eithers = do
+processMatrix :: (Either String (V.Vector ScoreTarget), Either String (V.Vector ScoreGroup)) -> IO (V.Vector ScoreTarget, V.Vector ScoreGroup)
+processMatrix eithers = do
     case fst eithers of
         Left e -> do
             putStrLn e
@@ -30,7 +30,7 @@ getIELTSLevelDataMap = do
     case decode NoHeader csvData of
         Left  _ -> return Nothing
         Right m -> do
-            (a, b) <- (removeEither . parseMatrix) m
+            (a, b) <- (processMatrix . parseMatrix) m
             return $ Just $ toIELTSLevelDataMap a b
 
 main :: IO ()
