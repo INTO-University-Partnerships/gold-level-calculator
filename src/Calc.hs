@@ -14,25 +14,18 @@ import Types (
     NumericScoreRange(..),
     LetterScoreRange(..),
     ScoreGroup(..),
-    IELTSLevelData(..),
-    IELTSLevelDataMap
+    IELTSLevelData(..)
     )
 
 import qualified Data.Map.Strict as M
+import qualified Data.Vector as V
 
-calcScoreTallys :: IELTSLevelDataMap
-                 -> IELTSLevel
-                 -> ListeningScore
-                 -> ReadingScore
-                 -> WritingScore
-                 -> SpeakingScore
-                 -> Maybe (M.Map GroupName Int)
-calcScoreTallys m l ls rs ws ss = do
-    case ieltsLevelData of
-        Nothing -> Nothing
-        Just (IELTSLevelData st msg) -> Just $ M.map getScoreTallyForGroup msg
+calcTargetIndices :: IELTSLevelData -> M.Map GroupName Int -> M.Map GroupName (V.Vector Int)
+calcTargetIndices = undefined
+
+calcScoreTallys :: IELTSLevelData -> ListeningScore -> ReadingScore -> WritingScore -> SpeakingScore -> M.Map GroupName Int
+calcScoreTallys (IELTSLevelData _ msg) ls rs ws ss = M.map getScoreTallyForGroup msg
     where
-        ieltsLevelData = M.lookup l m
         getScoreTallyForGroup :: ScoreGroup -> Int
         getScoreTallyForGroup sg = sum $ f [(ls, lsLower, lsUpper), (rs, rsLower, rsUpper)] ++ f [(ws, wsLower, wsUpper), (ss, ssLower, ssUpper)]
             where (NumericScoreRange lsLower lsUpper) = listeningScoreRange sg

@@ -186,25 +186,19 @@ prop_parseRecordScoreGroupFail xs =
         Left  _ -> True
     where r = V.fromList $ map (encodeUtf8 . T.pack) $ xs
 
-prop_calcScoreTallysReturnsNothingIfIELTSLevelNotFound :: IELTSLevel -> NumericScoreWrapper -> NumericScoreWrapper -> LetterScore -> LetterScore -> Bool
-prop_calcScoreTallysReturnsNothingIfIELTSLevelNotFound l (NumericScoreWrapper ls) (NumericScoreWrapper rs) ws ss =
-    calcScoreTallys M.empty l ls rs ws ss == Nothing
-
 prop_calcScoreTallysLengthEqualsScoreGroupLength :: IELTSLevel -> NumericScoreWrapper -> NumericScoreWrapper -> LetterScore -> LetterScore -> Property
 prop_calcScoreTallysLengthEqualsScoreGroupLength l (NumericScoreWrapper ls) (NumericScoreWrapper rs) ws ss = monadicIO $ do
     ieltsLevelDataMap <- run $ getIELTSLevelDataMap
-    let ieltsLevelDataMap' = fromJust ieltsLevelDataMap
-    let ieltsLevelData     = fromJust $ M.lookup l ieltsLevelDataMap'
-    case calcScoreTallys ieltsLevelDataMap' l ls rs ws ss of
-        Nothing     -> assert False
-        Just result -> assert $ M.size result == M.size (scoreGroups ieltsLevelData)
+    let ieltsLevelData = fromJust $ M.lookup l $ fromJust ieltsLevelDataMap
+    let result = calcScoreTallys ieltsLevelData ls rs ws ss
+    assert $ M.size result == M.size (scoreGroups ieltsLevelData)
 
 prop_calcScoreTallysSumsToFour :: IELTSLevel -> NumericScoreWrapper -> NumericScoreWrapper -> LetterScore -> LetterScore -> Property
 prop_calcScoreTallysSumsToFour l (NumericScoreWrapper ls) (NumericScoreWrapper rs) ws ss = monadicIO $ do
     ieltsLevelDataMap <- run $ getIELTSLevelDataMap
-    case calcScoreTallys (fromJust ieltsLevelDataMap) l ls rs ws ss of
-        Nothing     -> assert False
-        Just result -> assert $ M.foldr (\n acc -> n + acc) 0 result == 4 -- listening, reading, writing, speaking
+    let ieltsLevelData = fromJust $ M.lookup l $ fromJust ieltsLevelDataMap
+    let result = calcScoreTallys ieltsLevelData ls rs ws ss
+    assert $ M.foldr (\n acc -> n + acc) 0 result == 4 -- listening, reading, writing, speaking
 
 {--}
 
