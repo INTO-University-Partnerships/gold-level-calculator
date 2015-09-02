@@ -11,7 +11,6 @@ executable gold-level-calculator
                     Parse,
                     Calc,
                     IOActions
-  other-extensions: OverloadedStrings
   build-depends:    base,
                     bytestring,
                     text,
