@@ -1,15 +1,15 @@
 {-# LANGUAGE TemplateHaskell #-}
 
 import Types
-import Calc
+import Calc (calcScoreTallys)
 import IOActions (getIELTSLevelDataMap)
 
 import Data.Csv (Parser, parseField, parseRecord, runParser)
 import Data.Text.Encoding (encodeUtf8)
 import Data.Maybe (fromJust)
-import Test.QuickCheck
-import Test.QuickCheck.All()
-import Test.QuickCheck.Monadic
+import Test.QuickCheck (Arbitrary(..), elements, vectorOf, Property, (==>))
+import Test.QuickCheck.All (quickCheckAll)
+import Test.QuickCheck.Monadic (monadicIO, assert, run)
 
 import qualified Data.ByteString.Internal as BI
 import qualified Data.Map.Strict as M

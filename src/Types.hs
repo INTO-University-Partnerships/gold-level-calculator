@@ -28,7 +28,7 @@ module Types (
 import Control.Monad (mzero)
 import Data.Csv (Parser, Record, FromField, parseField, FromRecord, parseRecord, runParser, index, (.!))
 import Data.Text.Encoding (decodeUtf8)
-import Test.QuickCheck
+import Test.QuickCheck (Arbitrary(..), elements)
 
 import qualified Data.Attoparsec.Text as AT
 import qualified Data.ByteString.Lazy as BL

@@ -5,7 +5,7 @@ module Parse (
     toIELTSLevelDataMap
 ) where
 
-import Types
+import Types (Matrix, IELTSLevel, ScoreTarget(..), ScoreGroup(..), ScoreGroupMap, IELTSLevelData(..), IELTSLevelDataMap)
 import Data.Csv (parseRecord, runParser)
 
 import qualified Data.ByteString.Lazy as BL
