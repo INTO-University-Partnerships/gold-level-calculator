@@ -18,7 +18,8 @@ executable gold-level-calculator
                     vector,
                     containers,
                     cassava,
-                    attoparsec
+                    attoparsec,
+                    QuickCheck
   default-language: Haskell2010
 
 test-suite gold-level-calculator-test

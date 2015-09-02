@@ -16,6 +16,7 @@ main = do
         Just ieltsLevelDataMap' -> do
             forM_ (M.keys ieltsLevelDataMap') $ \k -> do
                 case M.lookup k ieltsLevelDataMap' of
+                    Nothing -> putStrLn $ "IELTS level " ++ show k ++ " not found in IELTS level data map"
                     Just (IELTSLevelData st msg) -> do
                         putStrLn $ "IELTS level data for " ++ show k
                         putStrLn $ show st

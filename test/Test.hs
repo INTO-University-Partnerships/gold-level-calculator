@@ -1,77 +1,36 @@
 {-# LANGUAGE TemplateHaskell #-}
 
 import Types
-import Parse
 import Calc
 import IOActions (getIELTSLevelDataMap)
 
 import Data.Csv (Parser, parseField, parseRecord, runParser)
 import Data.Text.Encoding (encodeUtf8)
 import Data.Maybe (fromJust)
+import Test.QuickCheck
+import Test.QuickCheck.All()
+import Test.QuickCheck.Monadic
 
 import qualified Data.ByteString.Internal as BI
 import qualified Data.Map.Strict as M
 import qualified Data.Text as T
 import qualified Data.Vector as V
 
-import Test.QuickCheck
-import Test.QuickCheck.All
-import Test.QuickCheck.Monadic
-
-{--}
-
 utf8EncodedFieldData :: Show a => a -> BI.ByteString
 utf8EncodedFieldData = encodeUtf8 . T.pack . show
 
-ieltsRange :: [IELTSLevel]
-ieltsRange = [L45, L50, L55, L60, L65]
-
-numericScoreRange :: [Int]
-numericScoreRange = [0..100]
-
-letterScoreRange :: [LetterScore]
-letterScoreRange = [A1, A1P, A2, A2P, B1, B1P, B2, B2P, C1, C1P, C2]
-
-targetRange :: [Target]
-targetRange = [NoGOLD, L1, L2, L3, Exception, Alert, Blank]
-
 magicConstants :: [Int]
 magicConstants = [1, 5, 15, 34, 65]
-
-{--}
 
 newtype NumericScoreWrapper = NumericScoreWrapper NumericScore
 newtype TargetList          = TargetList [Target] deriving Show
 newtype DefaultToZeroList   = DefaultToZeroList [DefaultToZero] deriving Show
 
-{--}
-
 instance Show NumericScoreWrapper where
     show (NumericScoreWrapper n) = show n
 
-instance Arbitrary IELTSLevel where
-    arbitrary = elements ieltsRange
-
 instance Arbitrary NumericScoreWrapper where
     arbitrary = elements $ map NumericScoreWrapper numericScoreRange
-
-instance Arbitrary LetterScore where
-    arbitrary = elements letterScoreRange
-
-instance Arbitrary NumericScoreRange where
-    arbitrary = do
-        s1 <- elements numericScoreRange
-        s2 <- elements numericScoreRange
-        return $ NumericScoreRange (min s1 s2) (max s1 s2)
-
-instance Arbitrary LetterScoreRange where
-    arbitrary = do
-        s1 <- elements letterScoreRange
-        s2 <- elements letterScoreRange
-        return $ LetterScoreRange (min s1 s2) (max s1 s2)
-
-instance Arbitrary Target where
-    arbitrary = elements targetRange
 
 instance Arbitrary TargetList where
     arbitrary = do
@@ -84,8 +43,6 @@ instance Arbitrary DefaultToZeroList where
         let l = last magicConstants
         xs <- vectorOf l $ elements $ map DefaultToZero [0..4]
         return $ DefaultToZeroList xs
-
-{--}
 
 prop_parseFieldIELTSLevelSuccess :: IELTSLevel -> Bool
 prop_parseFieldIELTSLevelSuccess l =
@@ -107,7 +64,7 @@ prop_parseFieldNumericScoreRangeSuccess nsr@(NumericScoreRange lower upper) =
     where f = show nsr
 
 prop_parseFieldNumericScoreRangeLowerGTUpperFail :: NumericScoreRange -> Property
-prop_parseFieldNumericScoreRangeLowerGTUpperFail nsr@(NumericScoreRange lower upper) = upper > lower ==>
+prop_parseFieldNumericScoreRangeLowerGTUpperFail (NumericScoreRange lower upper) = upper > lower ==>
     case runParser (parseField (encodeUtf8 $ T.pack f) :: Parser NumericScoreRange) of
         Right _ -> False
         Left  _ -> True
@@ -127,7 +84,7 @@ prop_parseFieldLetterScoreRangeSuccess lsr@(LetterScoreRange lower upper) =
     where f = show lsr
 
 prop_parseFieldLetterScoreRangeLowerGTUpperFail :: LetterScoreRange -> Property
-prop_parseFieldLetterScoreRangeLowerGTUpperFail lsr@(LetterScoreRange lower upper) = upper > lower ==>
+prop_parseFieldLetterScoreRangeLowerGTUpperFail (LetterScoreRange lower upper) = upper > lower ==>
     case runParser (parseField (encodeUtf8 $ T.pack f) :: Parser LetterScoreRange) of
         Right _ -> False
         Left  _ -> True
@@ -200,7 +157,7 @@ prop_calcScoreTallysSumsToFour l (NumericScoreWrapper ls) (NumericScoreWrapper r
     let result = calcScoreTallys ieltsLevelData ls rs ws ss
     assert $ M.foldr (\n acc -> n + acc) 0 result == 4 -- listening, reading, writing, speaking
 
-{--}
-
 return []
+
+main :: IO Bool
 main = $quickCheckAll

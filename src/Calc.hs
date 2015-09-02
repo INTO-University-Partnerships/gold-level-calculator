@@ -1,11 +1,11 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Calc (
-    calcScoreTallys
+    calcScoreTallys,
+    calcTargetIndices
 ) where
 
 import Types (
-    IELTSLevel,
     GroupName,
     ListeningScore,
     ReadingScore,
@@ -20,9 +20,6 @@ import Types (
 import qualified Data.Map.Strict as M
 import qualified Data.Vector as V
 
-calcTargetIndices :: IELTSLevelData -> M.Map GroupName Int -> M.Map GroupName (V.Vector Int)
-calcTargetIndices = undefined
-
 calcScoreTallys :: IELTSLevelData -> ListeningScore -> ReadingScore -> WritingScore -> SpeakingScore -> M.Map GroupName Int
 calcScoreTallys (IELTSLevelData _ msg) ls rs ws ss = M.map getScoreTallyForGroup msg
     where
@@ -34,3 +31,6 @@ calcScoreTallys (IELTSLevelData _ msg) ls rs ws ss = M.map getScoreTallyForGroup
                   (LetterScoreRange  ssLower ssUpper) = speakingScoreRange sg
                   f :: Ord a => [(a, a, a)] -> [Int]
                   f = map (\(score, lower, upper) -> if score >= lower && score <= upper then 1 else 0)
+
+calcTargetIndices :: IELTSLevelData -> M.Map GroupName Int -> M.Map GroupName (V.Vector Int)
+calcTargetIndices = undefined
