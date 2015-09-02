@@ -2,7 +2,8 @@
 
 module Calc (
     calcScoreTallys,
-    calcTargetIndices
+    calcTargetIndices,
+    calcTargetIndex
 ) where
 
 import Types (
@@ -13,15 +14,20 @@ import Types (
     SpeakingScore,
     NumericScoreRange(..),
     LetterScoreRange(..),
+    DefaultToZero(..),
     ScoreGroup(..),
-    IELTSLevelData(..)
+    ScoreGroupMap
     )
+
+import Data.List (group, sort)
 
 import qualified Data.Map.Strict as M
 import qualified Data.Vector as V
 
-calcScoreTallys :: IELTSLevelData -> ListeningScore -> ReadingScore -> WritingScore -> SpeakingScore -> M.Map GroupName Int
-calcScoreTallys (IELTSLevelData _ msg) ls rs ws ss = M.map getScoreTallyForGroup msg
+type ScoreTallyMap = M.Map GroupName Int
+
+calcScoreTallys :: ScoreGroupMap -> ListeningScore -> ReadingScore -> WritingScore -> SpeakingScore -> ScoreTallyMap
+calcScoreTallys msg ls rs ws ss = M.map getScoreTallyForGroup msg
     where
         getScoreTallyForGroup :: ScoreGroup -> Int
         getScoreTallyForGroup sg = sum $ f [(ls, lsLower, lsUpper), (rs, rsLower, rsUpper)] ++ f [(ws, wsLower, wsUpper), (ss, ssLower, ssUpper)]
@@ -32,5 +38,20 @@ calcScoreTallys (IELTSLevelData _ msg) ls rs ws ss = M.map getScoreTallyForGroup
                   f :: Ord a => [(a, a, a)] -> [Int]
                   f = map (\(score, lower, upper) -> if score >= lower && score <= upper then 1 else 0)
 
-calcTargetIndices :: IELTSLevelData -> M.Map GroupName Int -> M.Map GroupName (V.Vector Int)
-calcTargetIndices = undefined
+zippingFunction :: (GroupName, ScoreGroup) -> (GroupName, Int) -> [Int]
+zippingFunction (_, sg) (_, st) = V.toList $ V.findIndices (\(DefaultToZero count) -> count == st) cs
+    where cs = counts sg
+
+calcTargetIndices :: ScoreGroupMap -> ScoreTallyMap -> Maybe [[Int]]
+calcTargetIndices msg mst =
+    case compare (M.keys msg) (M.keys mst) of
+        EQ -> Just $ zipWith zippingFunction (M.toAscList msg) (M.toAscList mst)
+        _  -> Nothing
+
+calcTargetIndex :: [[Int]] -> Maybe Int
+calcTargetIndex xss =
+    case f of
+        [xs] -> if length xs == n then Just $ (head . head) f else Nothing
+        _    -> Nothing
+    where n = length xss
+          f = filter (\l -> length l == n) $ (group . sort . concat) xss
