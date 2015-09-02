@@ -30,7 +30,9 @@ test-suite gold-level-calculator-test
   other-modules:    Types,
                     Parse,
                     Calc,
-                    IOActions
+                    IOActions,
+                    TestParse,
+                    TestCalc
   build-depends:    base,
                     bytestring,
                     text,
