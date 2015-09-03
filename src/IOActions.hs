@@ -1,8 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module IOActions (
-    getIELTSLevelDataMap
-) where
+module IOActions (getIELTSLevelDataMap) where
 
 import Types (ScoreTarget, ScoreGroup, IELTSLevelDataMap)
 import Parse (parseMatrix, toIELTSLevelDataMap)

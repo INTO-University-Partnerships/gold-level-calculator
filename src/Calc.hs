@@ -1,22 +1,22 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Calc (
-    calcScoreTallys,
-    calcTargetIndices,
-    calcTargetIndex
+module Calc
+( calcScoreTallys
+, calcTargetIndices
+, calcTargetIndex
 ) where
 
-import Types (
-    GroupName,
-    ListeningScore,
-    ReadingScore,
-    WritingScore,
-    SpeakingScore,
-    NumericScoreRange(..),
-    LetterScoreRange(..),
-    DefaultToZero(..),
-    ScoreGroup(..),
-    ScoreGroupMap
+import Types
+    ( GroupName
+    , ListeningScore
+    , ReadingScore
+    , WritingScore
+    , SpeakingScore
+    , NumericScoreRange(..)
+    , LetterScoreRange(..)
+    , DefaultToZero(..)
+    , ScoreGroup(..)
+    , ScoreGroupMap
     )
 
 import Data.List (group, sort)

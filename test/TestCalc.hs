@@ -1,8 +1,6 @@
 {-# LANGUAGE TemplateHaskell #-}
 
-module TestCalc (
-    testCalc
-) where
+module TestCalc (testCalc) where
 
 import Types
 import Calc (calcScoreTallys, calcTargetIndices, calcTargetIndex)

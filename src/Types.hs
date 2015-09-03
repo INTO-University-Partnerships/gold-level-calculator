@@ -1,28 +1,28 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Types (
-    Matrix,
-    IELTSLevel(..),
-    GroupName,
-    NumericScore,
-    LetterScore(..),
-    Target(..),
-    ListeningScore,
-    ReadingScore,
-    WritingScore,
-    SpeakingScore,
-    NumericScoreRange(..),
-    LetterScoreRange(..),
-    DefaultToZero(..),
-    ScoreTarget(..),
-    ScoreGroup(..),
-    ScoreGroupMap,
-    IELTSLevelData(..),
-    IELTSLevelDataMap,
-    ieltsRange,
-    targetRange,
-    numericScoreRange,
-    letterScoreRange
+module Types
+( Matrix
+, IELTSLevel(..)
+, GroupName
+, NumericScore
+, LetterScore(..)
+, Target(..)
+, ListeningScore
+, ReadingScore
+, WritingScore
+, SpeakingScore
+, NumericScoreRange(..)
+, LetterScoreRange(..)
+, DefaultToZero(..)
+, ScoreTarget(..)
+, ScoreGroup(..)
+, ScoreGroupMap
+, IELTSLevelData(..)
+, IELTSLevelDataMap
+, ieltsRange
+, targetRange
+, numericScoreRange
+, letterScoreRange
 ) where
 
 import Control.Monad (mzero)

@@ -1,8 +1,6 @@
 {-# LANGUAGE TemplateHaskell #-}
 
-module TestParse (
-    testParse
-) where
+module TestParse (testParse) where
 
 import Types
 

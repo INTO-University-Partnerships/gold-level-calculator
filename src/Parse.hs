@@ -1,8 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Parse (
-    parseMatrix,
-    toIELTSLevelDataMap
+module Parse
+( parseMatrix
+, toIELTSLevelDataMap
 ) where
 
 import Types (Matrix, IELTSLevel, ScoreTarget(..), ScoreGroup(..), ScoreGroupMap, IELTSLevelData(..), IELTSLevelDataMap)
