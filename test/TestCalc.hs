@@ -3,7 +3,7 @@
 module TestCalc (testCalc) where
 
 import Types
-import Calc (calcScoreTallys, calcTargetIndices, calcTargetIndex)
+import Calc (calcScoreTallys, calcTargetIndices, calcTargetIndex, calcTarget)
 import IOActions (getIELTSLevelDataMap)
 
 import Data.List (nub)
@@ -111,6 +111,14 @@ prop_calcTargetIndexFail (Positive n) (Ordered xs) = length xs' > 1 ==>
         Just _  -> False
     where xs' = nub $ map (\(Positive i) -> i) xs
           xss = replicate n xs'
+
+prop_calcTarget :: IELTSLevel -> NumericScoreWrapper -> NumericScoreWrapper -> LetterScore -> LetterScore -> Property
+prop_calcTarget l (NumericScoreWrapper ls) (NumericScoreWrapper rs) ws ss = monadicIO $ do
+    ieltsLevelDataMap <- run $ getIELTSLevelDataMap
+    let ld = fromJust $ M.lookup l $ fromJust ieltsLevelDataMap
+    case calcTarget ld ls rs ws ss of
+        Nothing -> assert False
+        Just _  -> assert True
 
 return []
 

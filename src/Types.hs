@@ -23,6 +23,8 @@ module Types
 , targetRange
 , numericScoreRange
 , letterScoreRange
+, parseNumericScore
+, parseLetterScore
 ) where
 
 import Control.Monad (mzero)
@@ -51,25 +53,25 @@ data LetterScoreRange  = LetterScoreRange  LetterScore  LetterScore  deriving Eq
 newtype DefaultToZero = DefaultToZero Int deriving Eq
 
 data ScoreTarget = ScoreTarget {
-    scoreTargetLevel :: IELTSLevel,
-    targets          :: V.Vector Target
+    scoreTargetLevel :: IELTSLevel
+  , targets          :: V.Vector Target
 } deriving Show
 
 data ScoreGroup = ScoreGroup {
-    scoreGroupLevel     :: IELTSLevel,
-    scoreGroupName      :: GroupName,
-    listeningScoreRange :: NumericScoreRange,
-    readingScoreRange   :: NumericScoreRange,
-    writingScoreRange   :: LetterScoreRange,
-    speakingScoreRange  :: LetterScoreRange,
-    counts              :: V.Vector DefaultToZero
+    scoreGroupLevel     :: IELTSLevel
+  , scoreGroupName      :: GroupName
+  , listeningScoreRange :: NumericScoreRange
+  , readingScoreRange   :: NumericScoreRange
+  , writingScoreRange   :: LetterScoreRange
+  , speakingScoreRange  :: LetterScoreRange
+  , counts              :: V.Vector DefaultToZero
 } deriving Show
 
 type ScoreGroupMap = M.Map GroupName ScoreGroup
 
 data IELTSLevelData = IELTSLevelData {
-    scoreTarget :: ScoreTarget,
-    scoreGroups :: ScoreGroupMap
+    scoreTarget :: ScoreTarget
+  , scoreGroups :: ScoreGroupMap
 } deriving Show
 
 type IELTSLevelDataMap = M.Map IELTSLevel IELTSLevelData
@@ -223,22 +225,22 @@ instance FromField NumericScoreRange where
 
 instance FromRecord ScoreTarget where
     parseRecord v
-        | l > targetsStartAtColumn = ScoreTarget <$>
-                                     v .! 0      <*>
-                                     parseMultipleColumns v [targetsStartAtColumn..(l-1)]
+        | l > targetsStartAtColumn = ScoreTarget
+                                     <$> v .! 0
+                                     <*> parseMultipleColumns v [targetsStartAtColumn..(l-1)]
         | otherwise = mzero
         where l = length v
 
 instance FromRecord ScoreGroup where
     parseRecord v
-        | l > targetsStartAtColumn = ScoreGroup <$>
-                                     v .! 0     <*>
-                                     v .! 1     <*>
-                                     v .! 2     <*>
-                                     v .! 3     <*>
-                                     v .! 4     <*>
-                                     v .! 5     <*>
-                                     parseMultipleColumns v [targetsStartAtColumn..(l-1)]
+        | l > targetsStartAtColumn = ScoreGroup
+                                     <$> v .! 0
+                                     <*> v .! 1
+                                     <*> v .! 2
+                                     <*> v .! 3
+                                     <*> v .! 4
+                                     <*> v .! 5
+                                     <*> parseMultipleColumns v [targetsStartAtColumn..(l-1)]
         | otherwise = mzero
         where l = length v
 

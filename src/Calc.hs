@@ -4,10 +4,12 @@ module Calc
 ( calcScoreTallys
 , calcTargetIndices
 , calcTargetIndex
+, calcTarget
 ) where
 
 import Types
     ( GroupName
+    , Target
     , ListeningScore
     , ReadingScore
     , WritingScore
@@ -15,6 +17,8 @@ import Types
     , NumericScoreRange(..)
     , LetterScoreRange(..)
     , DefaultToZero(..)
+    , IELTSLevelData(..)
+    , ScoreTarget(..)
     , ScoreGroup(..)
     , ScoreGroupMap
     )
@@ -55,3 +59,11 @@ calcTargetIndex xss =
         _    -> Nothing
     where n = length xss
           f = filter (\l -> length l == n) $ (group . sort . concat) xss
+
+calcTarget :: IELTSLevelData -> ListeningScore -> ReadingScore -> WritingScore -> SpeakingScore -> Maybe Target
+calcTarget (IELTSLevelData st msg) ls rs ws ss = do
+    let scoreTallys = calcScoreTallys msg ls rs ws ss
+    let v = targets st
+    targetIndices <- calcTargetIndices msg scoreTallys
+    targetIndex <- calcTargetIndex targetIndices
+    return $ v V.! targetIndex
