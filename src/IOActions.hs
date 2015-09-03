@@ -1,12 +1,14 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module IOActions (getIELTSLevelDataMap) where
+module IOActions (getIELTSLevelDataMap, runCalculation) where
 
-import Types (ScoreTarget, ScoreGroup, IELTSLevelDataMap)
+import Calc (calcTarget)
+import Types (GOLDCalcOpts(..), ScoreTarget, ScoreGroup, IELTSLevelDataMap)
 import Parse (parseMatrix, toIELTSLevelDataMap)
 import Data.Csv (decode, HasHeader(..))
 
 import qualified Data.ByteString.Lazy as BL
+import qualified Data.Map.Strict as M
 import qualified Data.Vector as V
 
 csvDataFile :: String
@@ -36,3 +38,16 @@ getIELTSLevelDataMap = do
         Right m -> do
             (vst, vsg) <- (processMatrix . parseMatrix) m
             return $ Just $ toIELTSLevelDataMap vst vsg
+
+runCalculation :: GOLDCalcOpts -> IO ()
+runCalculation (GOLDCalcOpts ielts ls rs ws ss) = do
+    ieltsLevelDataMap <- getIELTSLevelDataMap
+    case ieltsLevelDataMap of
+        Nothing -> putStrLn "Something went wrong trying to load or parse the CSV data file"
+        Just ieltsLevelDataMap' -> do
+            case M.lookup ielts ieltsLevelDataMap' of
+                Nothing -> putStrLn $ "IELTS level " ++ show ielts ++ " not found in IELTS level data map"
+                Just ld -> do
+                    case calcTarget ld ls rs ws ss of
+                        Nothing -> putStrLn "Something went wrong trying to calculate a score target"
+                        Just t  -> putStrLn $ show t

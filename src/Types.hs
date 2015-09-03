@@ -14,6 +14,7 @@ module Types
 , NumericScoreRange(..)
 , LetterScoreRange(..)
 , DefaultToZero(..)
+, GOLDCalcOpts(..)
 , ScoreTarget(..)
 , ScoreGroup(..)
 , ScoreGroupMap
@@ -51,6 +52,14 @@ data NumericScoreRange = NumericScoreRange NumericScore NumericScore deriving Eq
 data LetterScoreRange  = LetterScoreRange  LetterScore  LetterScore  deriving Eq
 
 newtype DefaultToZero = DefaultToZero Int deriving Eq
+
+data GOLDCalcOpts = GOLDCalcOpts {
+    level          :: IELTSLevel
+  , listeningScore :: ListeningScore
+  , readingScore   :: ReadingScore
+  , writingScore   :: WritingScore
+  , speakingScore  :: SpeakingScore
+}
 
 data ScoreTarget = ScoreTarget {
     scoreTargetLevel :: IELTSLevel
