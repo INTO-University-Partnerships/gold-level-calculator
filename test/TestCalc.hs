@@ -1,6 +1,6 @@
 {-# LANGUAGE TemplateHaskell #-}
 
-module TestCalc (testCalc) where
+module TestCalc (testCalc, pentatopeNumbers) where
 
 import Types
 import Calc (calcScoreTallys, calcTargetIndices, calcTargetIndex, calcTarget)

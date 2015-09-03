@@ -2,6 +2,7 @@
 
 module TestParse (testParse) where
 
+import TestCalc (pentatopeNumbers)
 import Types
 
 import Data.Csv (Parser, parseField, parseRecord, runParser)
@@ -16,9 +17,6 @@ import qualified Data.Vector as V
 utf8EncodedFieldData :: Show a => a -> BI.ByteString
 utf8EncodedFieldData = encodeUtf8 . T.pack . show
 
-magicConstants :: [Int]
-magicConstants = [1, 5, 15, 34, 65]
-
 newtype NumericScoreWrapper = NumericScoreWrapper NumericScore
 newtype TargetList          = TargetList [Target] deriving Show
 newtype DefaultToZeroList   = DefaultToZeroList [DefaultToZero] deriving Show
@@ -31,13 +29,13 @@ instance Arbitrary NumericScoreWrapper where
 
 instance Arbitrary TargetList where
     arbitrary = do
-        l  <- elements magicConstants
+        l  <- elements pentatopeNumbers
         xs <- vectorOf l $ elements targetRange
         return $ TargetList xs
 
 instance Arbitrary DefaultToZeroList where
     arbitrary = do
-        let l = last magicConstants
+        let l = last pentatopeNumbers
         xs <- vectorOf l $ elements $ map DefaultToZero [0..4]
         return $ DefaultToZeroList xs
 
