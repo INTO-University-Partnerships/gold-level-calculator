@@ -40,6 +40,7 @@ test-suite gold-level-calculator-test
   hs-source-dirs:       test
   other-modules:        TestParse
                       , TestCalc
+                      , Util
   build-depends:        base
                       , gold-level-calculator
                       , bytestring

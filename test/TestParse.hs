@@ -2,42 +2,16 @@
 
 module TestParse (testParse) where
 
-import TestCalc (pentatopeNumbers)
+import Util (utf8EncodedFieldData, TargetList(..), DefaultToZeroList(..))
 import Types
 
 import Data.Csv (Parser, parseField, parseRecord, runParser)
 import Data.Text.Encoding (encodeUtf8)
-import Test.QuickCheck (Arbitrary(..), elements, vectorOf, Property, (==>))
+import Test.QuickCheck (Property, (==>))
 import Test.QuickCheck.All (quickCheckAll)
 
-import qualified Data.ByteString.Internal as BI
 import qualified Data.Text as T
 import qualified Data.Vector as V
-
-utf8EncodedFieldData :: Show a => a -> BI.ByteString
-utf8EncodedFieldData = encodeUtf8 . T.pack . show
-
-newtype NumericScoreWrapper = NumericScoreWrapper NumericScore
-newtype TargetList          = TargetList [Target] deriving Show
-newtype DefaultToZeroList   = DefaultToZeroList [DefaultToZero] deriving Show
-
-instance Show NumericScoreWrapper where
-    show (NumericScoreWrapper n) = show n
-
-instance Arbitrary NumericScoreWrapper where
-    arbitrary = elements $ map NumericScoreWrapper numericScoreRange
-
-instance Arbitrary TargetList where
-    arbitrary = do
-        l  <- elements pentatopeNumbers
-        xs <- vectorOf l $ elements targetRange
-        return $ TargetList xs
-
-instance Arbitrary DefaultToZeroList where
-    arbitrary = do
-        let l = last pentatopeNumbers
-        xs <- vectorOf l $ elements $ map DefaultToZero [0..4]
-        return $ DefaultToZeroList xs
 
 prop_parseFieldIELTSLevelSuccess :: IELTSLevel -> Bool
 prop_parseFieldIELTSLevelSuccess l =
