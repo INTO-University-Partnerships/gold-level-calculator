@@ -8,7 +8,7 @@ module Util
 , ScoreTallys(..)
 ) where
 
-import Types
+import Types (Target, NumericScore, DefaultToZero(..), IELTSLevel(..), numericScoreRange, targetRange)
 
 import Data.Text.Encoding (encodeUtf8)
 import Test.QuickCheck (Arbitrary(..), elements, choose, vectorOf)

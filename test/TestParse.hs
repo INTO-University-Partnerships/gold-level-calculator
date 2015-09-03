@@ -3,7 +3,7 @@
 module TestParse (testParse) where
 
 import Util (utf8EncodedFieldData, TargetList(..), DefaultToZeroList(..))
-import Types
+import Types (IELTSLevel, NumericScoreRange(..), LetterScoreRange(..), Target, ScoreTarget(..), ScoreGroup(..))
 
 import Data.Csv (Parser, parseField, parseRecord, runParser)
 import Data.Text.Encoding (encodeUtf8)

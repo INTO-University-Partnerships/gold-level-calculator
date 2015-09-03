@@ -3,7 +3,7 @@
 module TestCalc (testCalc) where
 
 import Util (pentatopeNumbers, NumericScoreWrapper(..), ScoreTallys(..))
-import Types
+import Types (IELTSLevel, IELTSLevelData(..), LetterScore)
 import Calc (calcScoreTallys, calcTargetIndices, calcTargetIndex, calcTarget)
 import IOActions (getIELTSLevelDataMap)
 
