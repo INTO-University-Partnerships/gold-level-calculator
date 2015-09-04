@@ -44,7 +44,7 @@ prop_calcTargetIndicesHasIndicesInRange (ScoreTallys (l, xs)) = monadicIO $ do
     let result = fromJust $ calcTargetIndices msg $ M.fromList $ zip (M.keys msg) xs
     let flattenedResult = concat result
     assert $ minimum flattenedResult >= 0
-    assert $ maximum flattenedResult < pentatopeNumbers !! (M.size msg)
+    assert $ maximum flattenedResult < (pentatopeNumbers 5) !! (M.size msg)
 
 prop_calcTargetIndicesFail :: ScoreTallys -> Property
 prop_calcTargetIndicesFail (ScoreTallys (l, xs)) = monadicIO $ do

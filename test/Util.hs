@@ -23,8 +23,8 @@ listsSummingToFour n = filter (\xs -> sum xs == 4) $ zeroToFour n
         zeroToFour 0 = [[]]
         zeroToFour m = concatMap (\xs -> [xs ++ [a] | a <- [0..4]]) $ zeroToFour (m-1)
 
-pentatopeNumbers :: [Int]
-pentatopeNumbers = map (length . listsSummingToFour) [1..5]
+pentatopeNumbers :: Int -> [Int]
+pentatopeNumbers n = take n $ map (length . listsSummingToFour) [1..]
 
 utf8EncodedFieldData :: Show a => a -> BI.ByteString
 utf8EncodedFieldData = encodeUtf8 . T.pack . show
@@ -42,13 +42,13 @@ instance Arbitrary NumericScoreWrapper where
 
 instance Arbitrary TargetList where
     arbitrary = do
-        l  <- elements pentatopeNumbers
+        l  <- elements $ pentatopeNumbers 5
         xs <- vectorOf l $ elements targetRange
         return $ TargetList xs
 
 instance Arbitrary DefaultToZeroList where
     arbitrary = do
-        let l = last pentatopeNumbers
+        let l = last $ pentatopeNumbers 5
         xs <- vectorOf l $ elements $ map DefaultToZero [0..4]
         return $ DefaultToZeroList xs
 
