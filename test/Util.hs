@@ -2,19 +2,34 @@ module Util
 ( listsSummingToFour
 , pentatopeNumbers
 , utf8EncodedFieldData
-, NumericScoreWrapper(..)
 , TargetList(..)
 , DefaultToZeroList(..)
 , ScoreTallys(..)
+, ieltsLevelDataMap
 ) where
 
-import Types (Target, NumericScore, DefaultToZero(..), IELTSLevel(..), numericScoreRange, targetRange)
+import Types
+    ( Target
+    , DefaultToZero(..)
+    , IELTSLevel(..)
+    , IELTSLevelData(..)
+    , IELTSLevelDataMap
+    , Target(..)
+    , ScoreTarget(..)
+    , LetterScore(..)
+    , NumericScoreRange(..)
+    , LetterScoreRange(..)
+    , targetRange
+    , ScoreGroup(..)
+    )
 
 import Data.Text.Encoding (encodeUtf8)
 import Test.QuickCheck (Arbitrary(..), elements, choose, vectorOf)
 
 import qualified Data.ByteString.Internal as BI
+import qualified Data.Map.Strict as M
 import qualified Data.Text as T
+import qualified Data.Vector as V
 
 listsSummingToFour :: Int -> [[Int]]
 listsSummingToFour n = filter (\xs -> sum xs == 4) $ zeroToFour n
@@ -29,16 +44,9 @@ pentatopeNumbers n = take n $ map (length . listsSummingToFour) [1..]
 utf8EncodedFieldData :: Show a => a -> BI.ByteString
 utf8EncodedFieldData = encodeUtf8 . T.pack . show
 
-newtype NumericScoreWrapper = NumericScoreWrapper NumericScore
 newtype TargetList          = TargetList [Target] deriving Show
 newtype DefaultToZeroList   = DefaultToZeroList [DefaultToZero] deriving Show
 newtype ScoreTallys         = ScoreTallys (IELTSLevel, [Int]) deriving Show
-
-instance Show NumericScoreWrapper where
-    show (NumericScoreWrapper n) = show n
-
-instance Arbitrary NumericScoreWrapper where
-    arbitrary = elements $ map NumericScoreWrapper numericScoreRange
 
 instance Arbitrary TargetList where
     arbitrary = do
@@ -61,3 +69,74 @@ instance Arbitrary ScoreTallys where
             _ -> do
                 l <- elements [L50, L55, L60, L65]
                 return $ ScoreTallys (l, xs)
+
+l45LevelData :: IELTSLevelData
+l45LevelData = IELTSLevelData scoreTarget scoreGroupMap
+    where
+        over          = ("Over",           ScoreGroup L45 "Over"           (NumericScoreRange 40 100) (NumericScoreRange 40 100) (LetterScoreRange B1  C2)  (LetterScoreRange B1  C2) $
+                        V.fromList $ map DefaultToZero [4,0,0,3,3,1,0,1,0,2,2,0,2,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
+        threshold     = ("Threshold - L1", ScoreGroup L45 "Threshold - L1" (NumericScoreRange 20  39) (NumericScoreRange 20  39) (LetterScoreRange A2  A2P) (LetterScoreRange A2  A2P) $
+                        V.fromList $ map DefaultToZero [0,4,0,1,0,3,3,0,1,2,0,2,1,2,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
+        middle        = ("Middle",         ScoreGroup L45 "Middle"         (NumericScoreRange  0  19) (NumericScoreRange  0  19) (LetterScoreRange A1  A1P) (LetterScoreRange A1  A1P) $
+                        V.fromList $ map DefaultToZero [0,0,4,0,1,0,1,3,3,0,2,2,1,1,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
+        scoreTarget   = ScoreTarget L45 $ V.fromList $ [NoGOLD,L1,Alert,X,X,L1,L1,Alert,Alert,L1,X,L1,L1,L1,X] ++ replicate 20 Blank
+        scoreGroupMap = M.fromList [over, threshold, middle]
+
+l50LevelData :: IELTSLevelData
+l50LevelData = IELTSLevelData scoreTarget scoreGroupMap
+    where
+        over          = ("Over",           ScoreGroup L50 "Over"           (NumericScoreRange 50 100) (NumericScoreRange 50 100) (LetterScoreRange B1P C2)  (LetterScoreRange B1P C2) $
+                        V.fromList $ map DefaultToZero [4,0,0,0,3,3,3,1,0,0,1,0,0,0,0,1,2,2,2,0,0,0,2,2,2,1,1,0,1,1,0,1,1,0,1])
+        threshold     = ("Threshold - L2", ScoreGroup L50 "Threshold - L2" (NumericScoreRange 40  49) (NumericScoreRange 40  49) (LetterScoreRange B1  B1)  (LetterScoreRange B1  B1) $
+                        V.fromList $ map DefaultToZero [0,4,0,0,1,0,0,3,3,3,0,1,0,0,1,0,2,0,0,2,2,0,1,1,0,2,2,2,1,0,1,1,0,1,1])
+        middle        = ("Middle",         ScoreGroup L50 "Middle"         (NumericScoreRange 20  39) (NumericScoreRange 20  39) (LetterScoreRange A2  A2P) (LetterScoreRange A2  A2P) $
+                        V.fromList $ map DefaultToZero [0,0,4,0,0,1,0,0,1,0,3,3,3,1,0,0,0,2,0,2,0,2,1,0,1,1,0,1,2,2,2,0,1,1,1])
+        deep          = ("Deep",           ScoreGroup L50 "Deep"           (NumericScoreRange  0  19) (NumericScoreRange  0  19) (LetterScoreRange A1  A1P) (LetterScoreRange A1  A1P) $
+                        V.fromList $ map DefaultToZero [0,0,0,4,0,0,1,0,0,1,0,0,1,3,3,3,0,0,2,0,2,2,0,1,1,0,1,1,0,1,1,2,2,2,1])
+        scoreTarget   = ScoreTarget L50 $ V.fromList [NoGOLD,L2,L1,Alert,X,X,X,L2,L2,L2,L1,L1,L1,Alert,Alert,Alert,L2,L2,X,L2,X,L1,L2,L2,X,L2,L2,L2,L2,L1,L1,X,X,X,Alert]
+        scoreGroupMap = M.fromList [over, threshold, middle, deep]
+
+l55LevelData :: IELTSLevelData
+l55LevelData = IELTSLevelData scoreTarget scoreGroupMap
+    where
+        over          = ("Over",           ScoreGroup L55 "Over"           (NumericScoreRange 60 100) (NumericScoreRange 60 100) (LetterScoreRange B2  C2)  (LetterScoreRange B2  C2) $
+                        V.fromList $ map DefaultToZero [4,0,0,0,3,3,3,1,0,0,1,0,0,0,0,1,2,2,2,0,0,0,2,2,2,1,1,0,1,1,0,1,1,0,1])
+        threshold     = ("Threshold",      ScoreGroup L55 "Threshold"      (NumericScoreRange 40  59) (NumericScoreRange 40  59) (LetterScoreRange B1  B1P) (LetterScoreRange B1  B1P) $
+                        V.fromList $ map DefaultToZero [0,4,0,0,1,0,0,3,3,3,0,1,0,0,1,0,2,0,0,2,2,0,1,1,0,2,2,2,1,0,1,1,0,1,1])
+        middle        = ("Middle",         ScoreGroup L55 "Middle"         (NumericScoreRange 30  39) (NumericScoreRange 30  39) (LetterScoreRange A2P A2P) (LetterScoreRange A2P A2P) $
+                        V.fromList $ map DefaultToZero [0,0,4,0,0,1,0,0,1,0,3,3,3,1,0,0,0,2,0,2,0,2,1,0,1,1,0,1,2,2,2,0,1,1,1])
+        deep          = ("Deep",           ScoreGroup L55 "Deep"           (NumericScoreRange  0  29) (NumericScoreRange  0  29) (LetterScoreRange A1  A2)  (LetterScoreRange A1  A2) $
+                        V.fromList $ map DefaultToZero [0,0,0,4,0,0,1,0,0,1,0,0,1,3,3,3,0,0,2,0,2,2,0,1,1,0,1,1,0,1,1,2,2,2,1])
+        scoreTarget   = ScoreTarget L55 $ V.fromList [NoGOLD,L2,L1,X,X,X,X,L2,L2,L2,L1,L1,L1,X,X,X,L2,L2,X,L2,X,L1,L2,L2,X,L2,L2,L2,L2,L1,L1,X,X,X,Alert]
+        scoreGroupMap = M.fromList [over, threshold, middle, deep]
+
+l60LevelData :: IELTSLevelData
+l60LevelData = IELTSLevelData scoreTarget scoreGroupMap
+    where
+        over          = ("Over",           ScoreGroup L60 "Over"           (NumericScoreRange 67 100) (NumericScoreRange 67 100) (LetterScoreRange B2P C2)  (LetterScoreRange B2P C2) $
+                        V.fromList $ map DefaultToZero [4,0,0,0,3,3,3,1,0,0,1,0,0,0,0,1,2,2,2,0,0,0,2,2,2,1,1,0,1,1,0,1,1,0,1])
+        threshold     = ("Threshold",      ScoreGroup L60 "Threshold"      (NumericScoreRange 60  66) (NumericScoreRange 60  66) (LetterScoreRange B2  B2)  (LetterScoreRange B2  B2) $
+                        V.fromList $ map DefaultToZero [0,4,0,0,1,0,0,3,3,3,0,1,0,0,1,0,2,0,0,2,2,0,1,1,0,2,2,2,1,0,1,1,0,1,1])
+        middle        = ("Middle",         ScoreGroup L60 "Middle"         (NumericScoreRange 50  59) (NumericScoreRange 50  59) (LetterScoreRange B1P B1P) (LetterScoreRange B1P B1P) $
+                        V.fromList $ map DefaultToZero [0,0,4,0,0,1,0,0,1,0,3,3,3,1,0,0,0,2,0,2,0,2,1,0,1,1,0,1,2,2,2,0,1,1,1])
+        deep          = ("Deep",           ScoreGroup L60 "Deep"           (NumericScoreRange  0  49) (NumericScoreRange  0  49) (LetterScoreRange A1  B1)  (LetterScoreRange A1  B1) $
+                        V.fromList $ map DefaultToZero [0,0,0,4,0,0,1,0,0,1,0,0,1,3,3,3,0,0,2,0,2,2,0,1,1,0,1,1,0,1,1,2,2,2,1])
+        scoreTarget   = ScoreTarget L60 $ V.fromList [NoGOLD,L3,L2,X,X,X,X,L3,L3,L3,L2,L2,L2,X,X,X,L3,L3,X,L3,X,L2,L3,L3,X,L3,L3,L3,L3,L2,L2,X,X,X,Alert]
+        scoreGroupMap = M.fromList [over, threshold, middle, deep]
+
+l65LevelData :: IELTSLevelData
+l65LevelData = IELTSLevelData scoreTarget scoreGroupMap
+    where
+        over          = ("Over",           ScoreGroup L65 "Over"           (NumericScoreRange 76 100) (NumericScoreRange 76 100) (LetterScoreRange C1  C2)  (LetterScoreRange C1  C2) $
+                        V.fromList $ map DefaultToZero [4,0,0,0,3,3,3,1,0,0,1,0,0,0,0,1,2,2,2,0,0,0,2,2,2,1,1,0,1,1,0,1,1,0,1])
+        threshold     = ("Threshold",      ScoreGroup L65 "Threshold"      (NumericScoreRange 67  75) (NumericScoreRange 67  75) (LetterScoreRange B2P B2P) (LetterScoreRange B2P B2P) $
+                        V.fromList $ map DefaultToZero [0,4,0,0,1,0,0,3,3,3,0,1,0,0,1,0,2,0,0,2,2,0,1,1,0,2,2,2,1,0,1,1,0,1,1])
+        middle        = ("Middle",         ScoreGroup L65 "Middle"         (NumericScoreRange 60  66) (NumericScoreRange 60  66) (LetterScoreRange B2  B2)  (LetterScoreRange B2  B2) $
+                        V.fromList $ map DefaultToZero [0,0,4,0,0,1,0,0,1,0,3,3,3,1,0,0,0,2,0,2,0,2,1,0,1,1,0,1,2,2,2,0,1,1,1])
+        deep          = ("Deep",           ScoreGroup L65 "Deep"           (NumericScoreRange  0  59) (NumericScoreRange  0  59) (LetterScoreRange A1  B1P) (LetterScoreRange A1  B1P) $
+                        V.fromList $ map DefaultToZero [0,0,0,4,0,0,1,0,0,1,0,0,1,3,3,3,0,0,2,0,2,2,0,1,1,0,1,1,0,1,1,2,2,2,1])
+        scoreTarget   = ScoreTarget L65 $ V.fromList [NoGOLD,L3,L3,X,X,X,X,L3,L3,L3,L3,L3,L3,X,X,X,L3,L3,X,L3,X,L3,L3,L3,X,L3,L3,L3,L3,L3,L3,X,X,X,Alert]
+        scoreGroupMap = M.fromList [over, threshold, middle, deep]
+
+ieltsLevelDataMap :: IELTSLevelDataMap
+ieltsLevelDataMap = M.fromList [(L45, l45LevelData), (L50, l50LevelData), (L55, l55LevelData), (L60, l60LevelData), (L65, l65LevelData)]

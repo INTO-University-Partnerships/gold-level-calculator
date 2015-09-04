@@ -3,7 +3,19 @@
 module TestParse (testParse) where
 
 import Util (utf8EncodedFieldData, TargetList(..), DefaultToZeroList(..))
-import Types (IELTSLevel, NumericScoreRange(..), LetterScoreRange(..), Target, ScoreTarget(..), ScoreGroup(..))
+
+import Types
+    ( IELTSLevel
+    , NumericScoreRange(..)
+    , LetterScoreRange(..)
+    , Target
+    , ScoreTarget(..)
+    , ScoreGroup(..)
+    , CSVInput(..)
+    , GOLDCalcParams(..)
+    , BoolWrapper
+    , NumericScoreWrapper(..)
+    )
 
 import Data.Csv (Parser, parseField, parseRecord, runParser)
 import Data.Text.Encoding (encodeUtf8)
@@ -12,6 +24,24 @@ import Test.QuickCheck.All (quickCheckAll)
 
 import qualified Data.Text as T
 import qualified Data.Vector as V
+
+prop_parseFieldBoolWrapper :: BoolWrapper -> Bool
+prop_parseFieldBoolWrapper b =
+    case runParser (parseField (utf8EncodedFieldData b) :: Parser BoolWrapper) of
+        Right b' -> b == b'
+        Left  _  -> False
+
+prop_parseFieldNumericScoreWrapperSuccess :: NumericScoreWrapper -> Property
+prop_parseFieldNumericScoreWrapperSuccess (NumericScoreWrapper n) = n >= 0 && n <= 100 ==>
+    case runParser (parseField (utf8EncodedFieldData n) :: Parser NumericScoreWrapper) of
+        Right (NumericScoreWrapper n') -> n == n'
+        Left  _  -> False
+
+prop_parseFieldNumericScoreWrapperFail :: Int -> Property
+prop_parseFieldNumericScoreWrapperFail n = n < 0 || n > 100 ==>
+    case runParser (parseField (utf8EncodedFieldData n) :: Parser NumericScoreWrapper) of
+        Right _ -> False
+        Left  _ -> True
 
 prop_parseFieldIELTSLevelSuccess :: IELTSLevel -> Bool
 prop_parseFieldIELTSLevelSuccess l =
@@ -108,6 +138,20 @@ prop_parseRecordScoreGroupSuccess l n ls rs ws ss (DefaultToZeroList cs) = (not 
 prop_parseRecordScoreGroupFail :: [String] -> Bool
 prop_parseRecordScoreGroupFail xs =
     case runParser (parseRecord r :: Parser ScoreGroup) of
+        Right _ -> False
+        Left  _ -> True
+    where r = V.fromList $ map (encodeUtf8 . T.pack) $ xs
+
+prop_parseRecordCSVInputSuccess :: CSVInput -> Bool
+prop_parseRecordCSVInputSuccess i@(CSVInput s l f c p (GOLDCalcParams ielts ls rs ws ss)) =
+    case runParser (parseRecord r :: Parser CSVInput) of
+        Right i' -> i' == i
+        Left  _  -> False
+    where r = V.fromList $ map (encodeUtf8 . T.pack) $ [s, l, f, c] ++ [show p, show ielts] ++ map show [ls, rs] ++ map show [ws, ss]
+
+prop_parseRecordCSVInputFail :: [String] -> Bool
+prop_parseRecordCSVInputFail xs =
+    case runParser (parseRecord r :: Parser CSVInput) of
         Right _ -> False
         Left  _ -> True
     where r = V.fromList $ map (encodeUtf8 . T.pack) $ xs

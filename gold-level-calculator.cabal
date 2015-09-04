@@ -16,11 +16,13 @@ library
                       , containers
                       , cassava
                       , attoparsec
+                      , directory
+                      , filepath
                       , QuickCheck
   default-language:     Haskell2010
 
-executable gold-level-calculator
-  main-is:              Main.hs
+executable calc-one
+  main-is:              One.hs
   hs-source-dirs:       app
   build-depends:        base
                       , gold-level-calculator
@@ -34,12 +36,28 @@ executable gold-level-calculator
                       , optparse-applicative
   default-language:     Haskell2010
 
-test-suite gold-level-calculator-test
+executable calc-many
+  main-is:              Many.hs
+  hs-source-dirs:       app
+  build-depends:        base
+                      , gold-level-calculator
+                      , bytestring
+                      , text
+                      , vector
+                      , containers
+                      , cassava
+                      , attoparsec
+                      , QuickCheck
+                      , optparse-applicative
+  default-language:     Haskell2010
+
+test-suite calc-test
   type:                 exitcode-stdio-1.0
   main-is:              Test.hs
   hs-source-dirs:       test
   other-modules:        TestParse
                       , TestCalc
+                      , TestIOActions
                       , Util
   build-depends:        base
                       , gold-level-calculator

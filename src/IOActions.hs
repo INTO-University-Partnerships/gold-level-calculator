@@ -1,26 +1,34 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module IOActions (getIELTSLevelDataMap, runCalculation) where
+module IOActions (getIELTSLevelDataMap, getCSVInputData, runOneCalculation, runManyCalculations) where
 
-import Calc (calcTarget)
-import Types (GOLDCalcOpts(..), ScoreTarget, ScoreGroup, IELTSLevelDataMap)
-import Parse (parseMatrix, toIELTSLevelDataMap)
-import Data.Csv (decode, HasHeader(..))
+import Calc (calcTarget, calcManyTargets)
+import Parse (parseCSVDataMatrix, toIELTSLevelDataMap)
+
+import Types
+    ( OneCalcOpts(..)
+    , ManyCalcOpts(..)
+    , ScoreTarget
+    , ScoreGroup
+    , IELTSLevelDataMap
+    , CSVInput(..)
+    )
+
+import Data.Csv (decode, encode, HasHeader(..))
+import System.Directory (doesFileExist)
+import System.FilePath (takeBaseName, takeExtension)
 
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Map.Strict as M
 import qualified Data.Vector as V
 
-csvDataFile :: String
-csvDataFile = "data/GOLD levels.csv"
-
-processMatrix :: (Either String (V.Vector ScoreTarget), Either String (V.Vector ScoreGroup))
-                 -> IO (V.Vector ScoreTarget, V.Vector ScoreGroup)
-processMatrix eithers = do
-    case fst eithers of
+processCSVDataMatrix :: (Either String (V.Vector ScoreTarget), Either String (V.Vector ScoreGroup))
+                        -> IO (V.Vector ScoreTarget, V.Vector ScoreGroup)
+processCSVDataMatrix (st, sg) = do
+    case st of
         Left  evst -> showErrorAndReturnEmptyVectors evst
         Right rvst -> do
-            case snd eithers of
+            case sg of
                 Left  evsg -> showErrorAndReturnEmptyVectors evsg
                 Right rvsg -> return $ (rvst, rvsg)
     where
@@ -28,20 +36,29 @@ processMatrix eithers = do
             putStrLn e
             return $ (V.empty, V.empty)
 
-getIELTSLevelDataMap :: IO (Maybe IELTSLevelDataMap)
-getIELTSLevelDataMap = do
-    csvData <- BL.readFile csvDataFile
+getIELTSLevelDataMap :: FilePath -> IO (Maybe IELTSLevelDataMap)
+getIELTSLevelDataMap f = do
+    csvData <- BL.readFile f
     case decode NoHeader csvData of
         Left e -> do
             putStrLn e
             return Nothing
         Right m -> do
-            (vst, vsg) <- (processMatrix . parseMatrix) m
-            return $ Just $ toIELTSLevelDataMap vst vsg
+            (vst, vsg) <- (processCSVDataMatrix . parseCSVDataMatrix) m
+            (return . Just) $ toIELTSLevelDataMap vst vsg
 
-runCalculation :: GOLDCalcOpts -> IO ()
-runCalculation (GOLDCalcOpts ielts ls rs ws ss) = do
-    ieltsLevelDataMap <- getIELTSLevelDataMap
+getCSVInputData :: FilePath -> IO (Maybe (V.Vector CSVInput))
+getCSVInputData f = do
+    csvData <- BL.readFile f
+    case decode NoHeader csvData of
+        Left e -> do
+            putStrLn e
+            return Nothing
+        Right m -> (return . Just) m
+
+runOneCalculation :: OneCalcOpts -> IO ()
+runOneCalculation (OneCalcOpts f ielts ls rs ws ss) = do
+    ieltsLevelDataMap <- getIELTSLevelDataMap f
     case ieltsLevelDataMap of
         Nothing -> putStrLn "Something went wrong trying to load or parse the CSV data file"
         Just ieltsLevelDataMap' -> do
@@ -51,3 +68,26 @@ runCalculation (GOLDCalcOpts ielts ls rs ws ss) = do
                     case calcTarget ld ls rs ws ss of
                         Nothing -> putStrLn "Something went wrong trying to calculate a score target"
                         Just t  -> putStrLn $ show t
+
+serializeOutputFile :: FilePath -> IELTSLevelDataMap -> V.Vector CSVInput -> IO ()
+serializeOutputFile f ieltsLevelDataMap csvInputData = do
+    let outputFile = takeBaseName f ++ postfix ++ takeExtension f
+    exists <- doesFileExist outputFile
+    case exists of
+        True  -> putStrLn $ "Output file \"" ++ outputFile ++ "\" already exists"
+        False -> do
+            let encoded = (encode . V.toList) $ calcManyTargets ieltsLevelDataMap csvInputData
+            BL.writeFile (takeBaseName f ++ postfix ++ takeExtension f) encoded
+            putStrLn $ "Output file \"" ++ outputFile ++ "\" has been written to the current working directory"
+    where postfix = "_output"
+
+runManyCalculations :: ManyCalcOpts -> IO ()
+runManyCalculations (ManyCalcOpts f g) = do
+    ieltsLevelDataMap <- getIELTSLevelDataMap f
+    case ieltsLevelDataMap of
+        Nothing -> putStrLn "Something went wrong trying to load or parse the CSV data file"
+        Just ieltsLevelDataMap' -> do
+            csvInputData <- getCSVInputData g
+            case csvInputData of
+                Nothing -> putStrLn "Something went wrong trying to load or parse the CSV users file"
+                Just csvInputData' -> serializeOutputFile g ieltsLevelDataMap' csvInputData'

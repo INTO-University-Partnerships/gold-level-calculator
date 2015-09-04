@@ -14,12 +14,18 @@ module Types
 , NumericScoreRange(..)
 , LetterScoreRange(..)
 , DefaultToZero(..)
-, GOLDCalcOpts(..)
+, BoolWrapper(..)
+, NumericScoreWrapper(..)
+, OneCalcOpts(..)
+, ManyCalcOpts(..)
+, GOLDCalcParams(..)
 , ScoreTarget(..)
 , ScoreGroup(..)
 , ScoreGroupMap
 , IELTSLevelData(..)
 , IELTSLevelDataMap
+, CSVInput(..)
+, CSVOutput(..)
 , ieltsRange
 , targetRange
 , numericScoreRange
@@ -28,43 +34,38 @@ module Types
 , parseLetterScore
 ) where
 
-import Control.Monad (mzero)
-import Data.Csv (Parser, Record, FromField, parseField, FromRecord, parseRecord, runParser, index, (.!))
-import Data.Text.Encoding (decodeUtf8)
+import Control.Monad (mzero, replicateM)
+import Data.Csv (Parser, Record, FromField, parseField, FromRecord, ToRecord(..), parseRecord, record, runParser, (.!))
+import Data.Text.Encoding (encodeUtf8, decodeUtf8)
 import Test.QuickCheck (Arbitrary(..), elements)
 
 import qualified Data.Attoparsec.Text as AT
+import qualified Data.ByteString.Internal as BI
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Map.Strict as M
+import qualified Data.Text as T
 import qualified Data.Vector as V
 
 type Matrix            = V.Vector (V.Vector BL.ByteString)
-data IELTSLevel        = L45 | L50 | L55 | L60 | L65 deriving (Eq, Ord)
 type GroupName         = String
 type NumericScore      = Int
+data IELTSLevel        = L45 | L50 | L55 | L60 | L65 deriving (Eq, Ord)
 data LetterScore       = A1 | A1P | A2 | A2P | B1 | B1P | B2 | B2P | C1 | C1P | C2 deriving (Eq, Ord)
-data Target            = NoGOLD | L1 | L2 | L3 | Exception | Alert | Blank deriving Eq
+data Target            = NoGOLD | L1 | L2 | L3 | X | Alert | Blank deriving Eq
 type ListeningScore    = NumericScore
 type ReadingScore      = NumericScore
 type WritingScore      = LetterScore
 type SpeakingScore     = LetterScore
 data NumericScoreRange = NumericScoreRange NumericScore NumericScore deriving Eq
 data LetterScoreRange  = LetterScoreRange  LetterScore  LetterScore  deriving Eq
+data OneCalcOpts       = OneCalcOpts FilePath IELTSLevel ListeningScore ReadingScore WritingScore SpeakingScore deriving Show
+data ManyCalcOpts      = ManyCalcOpts FilePath FilePath deriving Show
+data GOLDCalcParams    = GOLDCalcParams IELTSLevel NumericScoreWrapper NumericScoreWrapper WritingScore SpeakingScore deriving (Eq, Show)
+data ScoreTarget       = ScoreTarget IELTSLevel (V.Vector Target) deriving (Eq, Show)
 
-newtype DefaultToZero = DefaultToZero Int deriving Eq
-
-data GOLDCalcOpts = GOLDCalcOpts {
-    level          :: IELTSLevel
-  , listeningScore :: ListeningScore
-  , readingScore   :: ReadingScore
-  , writingScore   :: WritingScore
-  , speakingScore  :: SpeakingScore
-}
-
-data ScoreTarget = ScoreTarget {
-    scoreTargetLevel :: IELTSLevel
-  , targets          :: V.Vector Target
-} deriving Show
+newtype DefaultToZero       = DefaultToZero Int deriving Eq
+newtype BoolWrapper         = BoolWrapper Bool deriving Eq
+newtype NumericScoreWrapper = NumericScoreWrapper NumericScore deriving (Eq, Ord)
 
 data ScoreGroup = ScoreGroup {
     scoreGroupLevel     :: IELTSLevel
@@ -74,25 +75,34 @@ data ScoreGroup = ScoreGroup {
   , writingScoreRange   :: LetterScoreRange
   , speakingScoreRange  :: LetterScoreRange
   , counts              :: V.Vector DefaultToZero
-} deriving Show
+} deriving (Eq, Show)
 
-type ScoreGroupMap = M.Map GroupName ScoreGroup
-
-data IELTSLevelData = IELTSLevelData {
-    scoreTarget :: ScoreTarget
-  , scoreGroups :: ScoreGroupMap
-} deriving Show
-
+type ScoreGroupMap     = M.Map GroupName ScoreGroup
+data IELTSLevelData    = IELTSLevelData ScoreTarget ScoreGroupMap deriving (Eq, Show)
 type IELTSLevelDataMap = M.Map IELTSLevel IELTSLevelData
+
+data CSVInput = CSVInput {
+    studentID :: String
+  , lastName  :: String
+  , firstName :: String
+  , centre    :: String
+  , prev      :: BoolWrapper
+  , params    :: GOLDCalcParams
+} deriving (Eq, Show)
+
+data CSVOutput = CSVOutput CSVInput String deriving (Eq, Show)
 
 targetsStartAtColumn :: Int
 targetsStartAtColumn = 7 -- zero-based
+
+calcParamsStartAtColumn :: Int
+calcParamsStartAtColumn = 5 -- zero-based
 
 ieltsRange :: [IELTSLevel]
 ieltsRange = [L45, L50, L55, L60, L65]
 
 targetRange :: [Target]
-targetRange = [NoGOLD, L1, L2, L3, Exception, Alert, Blank]
+targetRange = [NoGOLD, L1, L2, L3, X, Alert, Blank]
 
 numericScoreRange :: [Int]
 numericScoreRange = [0..100]
@@ -102,8 +112,15 @@ letterScoreRange = [A1, A1P, A2, A2P, B1, B1P, B2, B2P, C1, C1P, C2]
 
 parseMultipleColumns :: FromField a => Record -> [Int] -> Parser (V.Vector a)
 parseMultipleColumns v xs = do
-    ms <- mapM (index v) xs
-    pure (V.fromList ms)
+    ms <- mapM ((.!) v) xs
+    pure $ V.fromList ms
+
+parseGOLDCalcParams :: Record -> [Int] -> Parser GOLDCalcParams
+parseGOLDCalcParams v xs = do
+    ielts  <- v .! head xs
+    [l, r] <- mapM ((.!) v) $ take 2 (tail xs)
+    [w, s] <- mapM ((.!) v) $ take 2 (drop 3 xs)
+    pure $ GOLDCalcParams ielts l r w s
 
 parseNumericScore :: AT.Parser NumericScore
 parseNumericScore = do
@@ -179,13 +196,13 @@ instance Show LetterScore where
     show C2  = "C2"
 
 instance Show Target where
-    show NoGOLD    = "No GOLD"
-    show L1        = "L1"
-    show L2        = "L2"
-    show L3        = "L3"
-    show Exception = "X"
-    show Alert     = "Alert"
-    show Blank     = ""
+    show NoGOLD = "No GOLD"
+    show L1     = "L1"
+    show L2     = "L2"
+    show L3     = "L3"
+    show X      = "X"
+    show Alert  = "Alert"
+    show Blank  = ""
 
 instance Show NumericScoreRange where
     show (NumericScoreRange lower upper) = show lower ++ " to " ++ show upper
@@ -197,10 +214,27 @@ instance Show DefaultToZero where
     show (DefaultToZero 0) = ""
     show (DefaultToZero n) = show n
 
+instance Show BoolWrapper where
+    show (BoolWrapper True) = "Y"
+    show (BoolWrapper _)    = "N"
+
+instance Show NumericScoreWrapper where
+    show (NumericScoreWrapper n) = show n
+
 instance FromField DefaultToZero where
     parseField f = case runParser (parseField f) of
         Left  _ -> pure $ DefaultToZero 0
         Right n -> pure $ DefaultToZero n
+
+instance FromField BoolWrapper where
+    parseField f
+        | f == "Y"  = pure $ BoolWrapper True
+        | otherwise = pure $ BoolWrapper False
+
+instance FromField NumericScoreWrapper where
+    parseField f = case AT.parseOnly (parseNumericScore <* AT.endOfInput) (decodeUtf8 f) of
+        Right r -> pure $ NumericScoreWrapper r
+        Left _  -> mzero
 
 instance FromField IELTSLevel where
     parseField f
@@ -217,10 +251,15 @@ instance FromField Target where
         | f == "L1"      = pure L1
         | f == "L2"      = pure L2
         | f == "L3"      = pure L3
-        | f == "X"       = pure Exception
+        | f == "X"       = pure X
         | f == "Alert"   = pure Alert
         | f == ""        = pure Blank
         | otherwise      = mzero
+
+instance FromField LetterScore where
+    parseField f = case AT.parseOnly (parseLetterScore <* AT.endOfInput) (decodeUtf8 f) of
+        Right r -> pure r
+        Left _  -> mzero
 
 instance FromField LetterScoreRange where
     parseField f = case AT.parseOnly (parseLetterScoreRange <* AT.endOfInput) (decodeUtf8 f) of
@@ -253,6 +292,36 @@ instance FromRecord ScoreGroup where
         | otherwise = mzero
         where l = length v
 
+instance FromRecord CSVInput where
+    parseRecord v
+        | l == 10 = CSVInput
+                    <$> v .! 0
+                    <*> v .! 1
+                    <*> v .! 2
+                    <*> v .! 3
+                    <*> v .! 4
+                    <*> parseGOLDCalcParams v [calcParamsStartAtColumn..(l-1)]
+        | otherwise = mzero
+        where l = length v
+
+instance ToRecord CSVOutput where
+    toRecord (CSVOutput (CSVInput stu las fir cen pre (GOLDCalcParams ielts ls rs ws ss)) result) = record l
+        where
+            enc :: String -> BI.ByteString
+            enc = encodeUtf8 . T.pack
+            encShow :: Show a => a -> BI.ByteString
+            encShow = enc . show
+            l :: [BI.ByteString]
+            l = map enc [stu, las, fir, cen] ++ [encShow pre] ++ [encShow ielts] ++ map encShow [ls, rs] ++ map encShow [ws, ss] ++ [enc result]
+
+instance Arbitrary BoolWrapper where
+    arbitrary = do
+        b <- elements [True, False]
+        return $ BoolWrapper b
+
+instance Arbitrary NumericScoreWrapper where
+    arbitrary = elements $ map NumericScoreWrapper numericScoreRange
+
 instance Arbitrary IELTSLevel where
     arbitrary = elements ieltsRange
 
@@ -273,3 +342,17 @@ instance Arbitrary LetterScoreRange where
 
 instance Arbitrary Target where
     arbitrary = elements targetRange
+
+instance Arbitrary GOLDCalcParams where
+    arbitrary = do
+        ielts  <- arbitrary
+        [l, r] <- replicateM 2 $ elements numericScoreRange
+        [w, s] <- replicateM 2 arbitrary
+        return $ GOLDCalcParams ielts (NumericScoreWrapper l) (NumericScoreWrapper r) w s
+
+instance Arbitrary CSVInput where
+    arbitrary = do
+        [stu, las, fir, cen] <- replicateM 4 arbitrary
+        pre <- arbitrary
+        opt <- arbitrary
+        return $ CSVInput stu las fir cen pre opt

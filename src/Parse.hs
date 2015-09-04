@@ -1,17 +1,24 @@
 module Parse
-( parseMatrix
+( parseCSVDataMatrix
 , toIELTSLevelDataMap
 ) where
 
-import Types (Matrix, IELTSLevel, ScoreTarget(..), ScoreGroup(..), ScoreGroupMap, IELTSLevelData(..), IELTSLevelDataMap)
+import Types
+    ( Matrix
+    , ScoreTarget(..)
+    , ScoreGroup(..)
+    , IELTSLevelData(..)
+    , IELTSLevelDataMap
+    )
+
 import Data.Csv (parseRecord, runParser)
 
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Map.Strict as M
 import qualified Data.Vector as V
 
-parseMatrix :: Matrix -> (Either String (V.Vector ScoreTarget), Either String (V.Vector ScoreGroup))
-parseMatrix m                   = (actualScoreTargets, actualScoreGroups)
+parseCSVDataMatrix :: Matrix -> (Either String (V.Vector ScoreTarget), Either String (V.Vector ScoreGroup))
+parseCSVDataMatrix m            = (actualScoreTargets, actualScoreGroups)
     where m'                    = V.filter (\v -> not $ V.null v || BL.null (v V.! 0)) m
           bytesToVector bs      = runParser (parseRecord $ V.map BL.toStrict bs)
           potentialScoreTargets = V.filter (\v -> BL.null (v V.! 1)) m'
@@ -19,13 +26,7 @@ parseMatrix m                   = (actualScoreTargets, actualScoreGroups)
           potentialScoreGroups  = V.filter (\v -> not $ BL.null (v V.! 1)) m'
           actualScoreGroups     = V.mapM bytesToVector potentialScoreGroups :: Either String (V.Vector ScoreGroup)
 
-getScoreGroupMap :: IELTSLevel -> V.Vector ScoreGroup -> ScoreGroupMap
-getScoreGroupMap l v = M.fromList $ V.toList v'
-    where v' = V.map (\sg -> (scoreGroupName sg, sg)) $ V.filter (\sg -> scoreGroupLevel sg == l) v
-
-getIELTSLevelData :: IELTSLevel -> V.Vector ScoreTarget -> V.Vector ScoreGroup -> IELTSLevelData
-getIELTSLevelData l vst vsg = IELTSLevelData (V.head $ V.filter (\st -> scoreTargetLevel st == l) vst) (getScoreGroupMap l vsg)
-
 toIELTSLevelDataMap :: V.Vector ScoreTarget -> V.Vector ScoreGroup -> IELTSLevelDataMap
-toIELTSLevelDataMap vst vsg = M.fromList $ V.toList v
-    where v = V.map (\st -> let stl = scoreTargetLevel st in (stl, getIELTSLevelData stl vst vsg)) vst
+toIELTSLevelDataMap vst vsg = M.fromList $ V.toList $ V.map (\(ScoreTarget l _) -> (l, getIELTSLevelData l)) vst
+    where getIELTSLevelData l = IELTSLevelData (V.head $ V.filter (\(ScoreTarget lvl _) -> lvl == l) vst) scoreGroupMap
+            where scoreGroupMap = M.fromList $ V.toList $ V.map (\sg -> (scoreGroupName sg, sg)) $ V.filter (\sg -> scoreGroupLevel sg == l) vsg
