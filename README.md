@@ -32,6 +32,8 @@ A command line programme to determine the GOLD level that users should be enroll
 #### Example
 
     $ build/calc-many --file "data/GOLD levels.csv" --users "data/GOLD users.csv"
-    CSVInput {studentID = "1231231230", lastName = "McGowan", firstName = "Mike", centre = "Brighton", prev = N, params = GOLDCalcParams 5.5 50 60 B1 B2+} ==> GM1L2
-    CSVInput {studentID = "4564564560", lastName = "van Tienhoven", firstName = "Sacha", centre = "Brighton", prev = Y, params = GOLDCalcParams 4.5 40 70 A1+ C2} ==> X
-    CSVInput {studentID = "7897897890", lastName = "Nockles", firstName = "Joe", centre = "Brighton", prev = N, params = GOLDCalcParams 6.5 80 80 C1 C2} ==> No GOLD
+    Output file "GOLD users_output.csv" has been written to the current working directory
+    $ more GOLD\ users_output.csv
+    1231231230,McGowan,Mike,Brighton,N,5.5,50,60,B1,B2+,GM1L2
+    4564564560,"van Tienhoven",Sacha,Brighton,Y,4.5,40,70,A1+,C2,X
+    7897897890,Nockles,Joe,Brighton,N,6.5,80,80,C1,C2,"No GOLD"
