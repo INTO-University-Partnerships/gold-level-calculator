@@ -304,15 +304,19 @@ instance FromRecord CSVInput where
         | otherwise = mzero
         where l = length v
 
-instance ToRecord CSVOutput where
-    toRecord (CSVOutput (CSVInput stu las fir cen pre (GOLDCalcParams ielts ls rs ws ss)) result) = record l
+enc :: String -> BI.ByteString
+enc = encodeUtf8 . T.pack
+
+instance ToRecord CSVInput where
+    toRecord (CSVInput stu las fir cen pre (GOLDCalcParams ielts ls rs ws ss)) = record l
         where
-            enc :: String -> BI.ByteString
-            enc = encodeUtf8 . T.pack
             encShow :: Show a => a -> BI.ByteString
             encShow = enc . show
             l :: [BI.ByteString]
-            l = map enc [stu, las, fir, cen] ++ [encShow pre] ++ [encShow ielts] ++ map encShow [ls, rs] ++ map encShow [ws, ss] ++ [enc result]
+            l = map enc [stu, las, fir, cen] ++ [encShow pre] ++ [encShow ielts] ++ map encShow [ls, rs] ++ map encShow [ws, ss]
+
+instance ToRecord CSVOutput where
+    toRecord (CSVOutput csvInput result) = V.snoc (toRecord csvInput) (enc result)
 
 instance Arbitrary BoolWrapper where
     arbitrary = do

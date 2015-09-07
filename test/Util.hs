@@ -4,6 +4,7 @@ module Util
 , utf8EncodedFieldData
 , TargetList(..)
 , DefaultToZeroList(..)
+, CSVInputList(..)
 , ScoreTallys(..)
 , ieltsLevelDataMap
 ) where
@@ -21,10 +22,11 @@ import Types
     , LetterScoreRange(..)
     , targetRange
     , ScoreGroup(..)
+    , CSVInput(..)
     )
 
 import Data.Text.Encoding (encodeUtf8)
-import Test.QuickCheck (Arbitrary(..), elements, choose, vectorOf)
+import Test.QuickCheck (Arbitrary(..), elements, choose, vectorOf, listOf)
 
 import qualified Data.ByteString.Internal as BI
 import qualified Data.Map.Strict as M
@@ -44,9 +46,10 @@ pentatopeNumbers n = take n $ map (length . listsSummingToFour) [1..]
 utf8EncodedFieldData :: Show a => a -> BI.ByteString
 utf8EncodedFieldData = encodeUtf8 . T.pack . show
 
-newtype TargetList          = TargetList [Target] deriving Show
-newtype DefaultToZeroList   = DefaultToZeroList [DefaultToZero] deriving Show
-newtype ScoreTallys         = ScoreTallys (IELTSLevel, [Int]) deriving Show
+newtype TargetList        = TargetList [Target] deriving Show
+newtype DefaultToZeroList = DefaultToZeroList [DefaultToZero] deriving Show
+newtype ScoreTallys       = ScoreTallys (IELTSLevel, [Int]) deriving Show
+newtype CSVInputList      = CSVInputList [CSVInput] deriving Show
 
 instance Arbitrary TargetList where
     arbitrary = do
@@ -69,6 +72,11 @@ instance Arbitrary ScoreTallys where
             _ -> do
                 l <- elements [L50, L55, L60, L65]
                 return $ ScoreTallys (l, xs)
+
+instance Arbitrary CSVInputList where
+    arbitrary = do
+        xs <- listOf arbitrary
+        return $ CSVInputList xs
 
 l45LevelData :: IELTSLevelData
 l45LevelData = IELTSLevelData scoreTarget scoreGroupMap
