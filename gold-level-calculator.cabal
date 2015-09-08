@@ -69,5 +69,6 @@ test-suite calc-test
                       , attoparsec
                       , QuickCheck
                       , directory
+                      , filepath
                       , silently
   default-language:     Haskell2010

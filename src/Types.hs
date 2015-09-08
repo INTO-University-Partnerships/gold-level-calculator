@@ -37,7 +37,7 @@ module Types
 import Control.Monad (mzero, replicateM)
 import Data.Csv (Parser, Record, FromField, parseField, FromRecord, ToRecord(..), parseRecord, record, runParser, (.!))
 import Data.Text.Encoding (encodeUtf8, decodeUtf8)
-import Test.QuickCheck (Arbitrary(..), elements)
+import Test.QuickCheck (Arbitrary(..), elements, vectorOf)
 
 import qualified Data.Attoparsec.Text as AT
 import qualified Data.ByteString.Internal as BI
@@ -356,7 +356,10 @@ instance Arbitrary GOLDCalcParams where
 
 instance Arbitrary CSVInput where
     arbitrary = do
-        [stu, las, fir, cen] <- replicateM 4 arbitrary
+        stu <- vectorOf 10 $ elements ['0'..'9']
+        las <- elements ["McGowan", "van Tienhoven", "Nockles", "van de Put", "Szkurłat", "Hodgson", "Elstob"]
+        fir <- elements ["Mike", "Sacha", "Joe", "Thomas", "Marcin", "Max", "Anthony"]
+        cen <- elements ["CIT", "EAL", "EXE", "MAN", "MDX", "MER", "NCL", "QUB", "SCO", "SGL", "STI", "UEA", "UOG"]
         pre <- arbitrary
         opt <- arbitrary
         return $ CSVInput stu las fir cen pre opt
