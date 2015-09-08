@@ -5,6 +5,7 @@ module Util
 , TargetList(..)
 , DefaultToZeroList(..)
 , CSVInputList(..)
+, CSVInputListLong(..)
 , ScoreTallys(..)
 , ieltsLevelDataMap
 ) where
@@ -50,6 +51,7 @@ newtype TargetList        = TargetList [Target] deriving Show
 newtype DefaultToZeroList = DefaultToZeroList [DefaultToZero] deriving Show
 newtype ScoreTallys       = ScoreTallys (IELTSLevel, [Int]) deriving Show
 newtype CSVInputList      = CSVInputList [CSVInput] deriving Show
+newtype CSVInputListLong  = CSVInputListLong [CSVInput] deriving Show
 
 instance Arbitrary TargetList where
     arbitrary = do
@@ -77,6 +79,11 @@ instance Arbitrary CSVInputList where
     arbitrary = do
         xs <- listOf arbitrary
         return $ CSVInputList xs
+
+instance Arbitrary CSVInputListLong where
+    arbitrary = do
+        xs <- vectorOf 1000 $ arbitrary
+        return $ CSVInputListLong xs
 
 l45LevelData :: IELTSLevelData
 l45LevelData = IELTSLevelData scoreTarget scoreGroupMap

@@ -1,10 +1,19 @@
 {-# LANGUAGE TemplateHaskell #-}
 
-module TestCalc (testCalc) where
+module TestCalc (testCalc, prop_calcManyTargetsSetsModule2IfPreviouslyOnGOLD) where
 
-import Util (pentatopeNumbers, ScoreTallys(..), ieltsLevelDataMap)
-import Types (IELTSLevel, IELTSLevelData(..), LetterScore, NumericScoreWrapper(..))
-import Calc (calcScoreTallys, calcTargetIndices, calcTargetIndex, calcTarget)
+import Util (pentatopeNumbers, ScoreTallys(..), ieltsLevelDataMap, CSVInputList(..), CSVInputListLong(..))
+import Calc (calcScoreTallys, calcTargetIndices, calcTargetIndex, calcTarget, calcManyTargets)
+
+import Types
+    ( IELTSLevel
+    , IELTSLevelData(..)
+    , LetterScore
+    , BoolWrapper(..)
+    , NumericScoreWrapper(..)
+    , CSVInput(..)
+    , CSVOutput(..)
+    )
 
 import Data.List (nub)
 import Data.Maybe (fromJust)
@@ -13,6 +22,7 @@ import Test.QuickCheck.All (quickCheckAll)
 import Test.QuickCheck.Modifiers (Positive(..), OrderedList(..))
 
 import qualified Data.Map.Strict as M
+import qualified Data.Vector as V
 
 prop_calcScoreTallysLengthEqualsScoreGroupLength :: IELTSLevel -> NumericScoreWrapper -> NumericScoreWrapper -> LetterScore -> LetterScore -> Bool
 prop_calcScoreTallysLengthEqualsScoreGroupLength l (NumericScoreWrapper ls) (NumericScoreWrapper rs) ws ss = M.size result == M.size msg
@@ -64,6 +74,29 @@ prop_calcTarget l (NumericScoreWrapper ls) (NumericScoreWrapper rs) ws ss =
         Nothing -> False
         Just _  -> True
     where ld = fromJust $ M.lookup l ieltsLevelDataMap
+
+prop_calcManyTargetsOutputSameLengthAsInput :: CSVInputList -> Bool
+prop_calcManyTargetsOutputSameLengthAsInput (CSVInputList xs) = V.length result == length xs
+    where result = calcManyTargets ieltsLevelDataMap $ V.fromList xs
+
+prop_calcManyTargetsOutputEchosInput :: CSVInputList -> Bool
+prop_calcManyTargetsOutputEchosInput (CSVInputList xs) = V.and $ V.zipWith f xs' result
+    where xs'    = V.fromList xs
+          result = calcManyTargets ieltsLevelDataMap xs'
+          f csvInput (CSVOutput csvInput' _) = csvInput == csvInput'
+
+prop_calcManyTargetsLastColumnHasResult :: CSVInputList -> Property
+prop_calcManyTargetsLastColumnHasResult (CSVInputList xs) = (not . null) xs  ==> V.all (\(CSVOutput _ r) -> r `elem` valid) result
+    where valid  = ["No GOLD", "X", "Alert", "GM1L1", "GM1L2", "GM1L3", "GM2L1", "GM2L2", "GM2L3"]
+          result = calcManyTargets ieltsLevelDataMap $ V.fromList xs
+
+prop_calcManyTargetsSetsModule2IfPreviouslyOnGOLD :: CSVInputListLong -> Bool
+prop_calcManyTargetsSetsModule2IfPreviouslyOnGOLD (CSVInputListLong xs) = not (V.null result') && V.all f result'
+    where mod1    = ["GM1L1", "GM1L2", "GM1L3"]
+          mod2    = ["GM2L1", "GM2L2", "GM2L3"]
+          result  = calcManyTargets ieltsLevelDataMap $ V.fromList xs
+          result' = V.filter (\(CSVOutput _ r) -> r `elem` mod1 ++ mod2) result
+          f (CSVOutput (CSVInput _ _ _ _ (BoolWrapper p) _) r) = (p && r `elem` mod2) || (not p && r `elem` mod1)
 
 return []
 
