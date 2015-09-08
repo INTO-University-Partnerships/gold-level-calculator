@@ -13,6 +13,7 @@ import Types
     , NumericScoreWrapper(..)
     , CSVInput(..)
     , CSVOutput(..)
+    , resultRange
     )
 
 import Data.List (nub)
@@ -86,14 +87,13 @@ prop_calcManyTargetsOutputEchosInput (CSVInputList xs) = V.and $ V.zipWith f xs'
           f csvInput (CSVOutput csvInput' _) = csvInput == csvInput'
 
 prop_calcManyTargetsLastColumnHasResult :: CSVInputList -> Property
-prop_calcManyTargetsLastColumnHasResult (CSVInputList xs) = (not . null) xs  ==> V.all (\(CSVOutput _ r) -> r `elem` valid) result
-    where valid  = ["No GOLD", "X", "Alert", "GM1L1", "GM1L2", "GM1L3", "GM2L1", "GM2L2", "GM2L3"]
-          result = calcManyTargets ieltsLevelDataMap $ V.fromList xs
+prop_calcManyTargetsLastColumnHasResult (CSVInputList xs) = (not . null) xs  ==> V.all (\(CSVOutput _ r) -> r `elem` resultRange) result
+    where result = calcManyTargets ieltsLevelDataMap $ V.fromList xs
 
 prop_calcManyTargetsSetsModule2IfPreviouslyOnGOLD :: CSVInputListLong -> Bool
 prop_calcManyTargetsSetsModule2IfPreviouslyOnGOLD (CSVInputListLong xs) = not (V.null result') && V.all f result'
-    where mod1    = ["GM1L1", "GM1L2", "GM1L3"]
-          mod2    = ["GM2L1", "GM2L2", "GM2L3"]
+    where mod1    = filter (\s -> take 3 s == "GM1") resultRange
+          mod2    = filter (\s -> take 3 s == "GM2") resultRange
           result  = calcManyTargets ieltsLevelDataMap $ V.fromList xs
           result' = V.filter (\(CSVOutput _ r) -> r `elem` mod1 ++ mod2) result
           f (CSVOutput (CSVInput _ _ _ _ (BoolWrapper p) _) r) = (p && r `elem` mod2) || (not p && r `elem` mod1)

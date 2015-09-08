@@ -13,6 +13,7 @@ module Types
 , SpeakingScore
 , NumericScoreRange(..)
 , LetterScoreRange(..)
+, enc
 , DefaultToZero(..)
 , BoolWrapper(..)
 , NumericScoreWrapper(..)
@@ -30,6 +31,7 @@ module Types
 , targetRange
 , numericScoreRange
 , letterScoreRange
+, resultRange
 , parseNumericScore
 , parseLetterScore
 ) where
@@ -52,6 +54,7 @@ type NumericScore      = Int
 data IELTSLevel        = L45 | L50 | L55 | L60 | L65 deriving (Eq, Ord)
 data LetterScore       = A1 | A1P | A2 | A2P | B1 | B1P | B2 | B2P | C1 | C1P | C2 deriving (Eq, Ord)
 data Target            = NoGOLD | L1 | L2 | L3 | X | Alert | Blank deriving Eq
+type Result            = String
 type ListeningScore    = NumericScore
 type ReadingScore      = NumericScore
 type WritingScore      = LetterScore
@@ -90,7 +93,7 @@ data CSVInput = CSVInput {
   , params    :: GOLDCalcParams
 } deriving (Eq, Show)
 
-data CSVOutput = CSVOutput CSVInput String deriving (Eq, Show)
+data CSVOutput = CSVOutput CSVInput Result deriving (Eq, Show)
 
 targetsStartAtColumn :: Int
 targetsStartAtColumn = 7 -- zero-based
@@ -103,6 +106,9 @@ ieltsRange = [L45, L50, L55, L60, L65]
 
 targetRange :: [Target]
 targetRange = [NoGOLD, L1, L2, L3, X, Alert, Blank]
+
+resultRange :: [Result]
+resultRange = ["No GOLD", "X", "Alert", "GM1L1", "GM1L2", "GM1L3", "GM2L1", "GM2L2", "GM2L3"]
 
 numericScoreRange :: [Int]
 numericScoreRange = [0..100]
@@ -363,3 +369,9 @@ instance Arbitrary CSVInput where
         pre <- arbitrary
         opt <- arbitrary
         return $ CSVInput stu las fir cen pre opt
+
+instance Arbitrary CSVOutput where
+    arbitrary = do
+        i <- arbitrary
+        r <- elements resultRange
+        return $ CSVOutput i r

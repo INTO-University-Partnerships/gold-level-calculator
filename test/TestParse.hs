@@ -12,12 +12,14 @@ import Types
     , ScoreTarget(..)
     , ScoreGroup(..)
     , CSVInput(..)
+    , CSVOutput(..)
     , GOLDCalcParams(..)
     , BoolWrapper
     , NumericScoreWrapper(..)
+    , enc
     )
 
-import Data.Csv (Parser, parseField, parseRecord, runParser)
+import Data.Csv (Parser, parseField, parseRecord, runParser, toRecord)
 import Data.Text.Encoding (encodeUtf8)
 import Test.QuickCheck (Property, (==>))
 import Test.QuickCheck.All (quickCheckAll)
@@ -31,8 +33,8 @@ prop_parseFieldBoolWrapper b =
         Right b' -> b == b'
         Left  _  -> False
 
-prop_parseFieldNumericScoreWrapperSuccess :: NumericScoreWrapper -> Property
-prop_parseFieldNumericScoreWrapperSuccess (NumericScoreWrapper n) = n >= 0 && n <= 100 ==>
+prop_parseFieldNumericScoreWrapperSuccess :: NumericScoreWrapper -> Bool
+prop_parseFieldNumericScoreWrapperSuccess (NumericScoreWrapper n) =
     case runParser (parseField (utf8EncodedFieldData n) :: Parser NumericScoreWrapper) of
         Right (NumericScoreWrapper n') -> n == n'
         Left  _  -> False
@@ -155,6 +157,18 @@ prop_parseRecordCSVInputFail xs =
         Right _ -> False
         Left  _ -> True
     where r = V.fromList $ map (encodeUtf8 . T.pack) $ xs
+
+prop_toRecordCSVInput :: CSVInput -> Bool
+prop_toRecordCSVInput i =
+    case runParser (parseRecord r :: Parser CSVInput) of
+        Right i' -> i' == i
+        Left  _  -> False
+    where r = toRecord i
+
+prop_toRecordCSVOutput :: CSVOutput -> Bool
+prop_toRecordCSVOutput o@(CSVOutput i r) = o' == V.snoc i' (enc r)
+    where o' = toRecord o
+          i' = toRecord i
 
 return []
 
