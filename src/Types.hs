@@ -110,6 +110,9 @@ numericScoreRange = [0..100]
 letterScoreRange :: [LetterScore]
 letterScoreRange = [A1, A1P, A2, A2P, B1, B1P, B2, B2P, C1, C1P, C2]
 
+enc :: String -> BI.ByteString
+enc = encodeUtf8 . T.pack
+
 parseMultipleColumns :: FromField a => Record -> [Int] -> Parser (V.Vector a)
 parseMultipleColumns v xs = do
     ms <- mapM ((.!) v) xs
@@ -303,9 +306,6 @@ instance FromRecord CSVInput where
                     <*> parseGOLDCalcParams v [calcParamsStartAtColumn..(l-1)]
         | otherwise = mzero
         where l = length v
-
-enc :: String -> BI.ByteString
-enc = encodeUtf8 . T.pack
 
 instance ToRecord CSVInput where
     toRecord (CSVInput stu las fir cen pre (GOLDCalcParams ielts ls rs ws ss)) = record l

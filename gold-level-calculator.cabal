@@ -16,9 +16,9 @@ library
                       , containers
                       , cassava
                       , attoparsec
+                      , QuickCheck
                       , directory
                       , filepath
-                      , QuickCheck
   default-language:     Haskell2010
 
 executable calc-one
@@ -67,6 +67,7 @@ test-suite calc-test
                       , containers
                       , cassava
                       , attoparsec
-                      , directory
                       , QuickCheck
+                      , directory
+                      , silently
   default-language:     Haskell2010

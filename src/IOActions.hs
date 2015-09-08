@@ -69,8 +69,8 @@ runOneCalculation (OneCalcOpts f ielts ls rs ws ss) = do
                         Nothing -> putStrLn "Something went wrong trying to calculate a score target"
                         Just t  -> putStrLn $ show t
 
-serializeOutputFile :: FilePath -> IELTSLevelDataMap -> V.Vector CSVInput -> IO ()
-serializeOutputFile f ieltsLevelDataMap csvInputData = do
+generateOutputFile :: FilePath -> IELTSLevelDataMap -> V.Vector CSVInput -> IO ()
+generateOutputFile f ieltsLevelDataMap csvInputData = do
     let outputFile = takeBaseName f ++ postfix ++ takeExtension f
     exists <- doesFileExist outputFile
     case exists of
@@ -90,4 +90,4 @@ runManyCalculations (ManyCalcOpts f g) = do
             csvInputData <- getCSVInputData g
             case csvInputData of
                 Nothing -> putStrLn "Something went wrong trying to load or parse the CSV users file"
-                Just csvInputData' -> serializeOutputFile g ieltsLevelDataMap' csvInputData'
+                Just csvInputData' -> generateOutputFile g ieltsLevelDataMap' csvInputData'
