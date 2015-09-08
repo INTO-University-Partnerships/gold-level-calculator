@@ -15,7 +15,7 @@ import Types
 
 import Data.Csv (encode)
 import Data.Maybe (fromJust)
-import System.Directory (removeFile)
+import System.Directory (getTemporaryDirectory, removeFile)
 import System.IO (openTempFile, hClose)
 import System.IO.Silently (capture)
 import Test.QuickCheck (Property, once)
@@ -36,7 +36,8 @@ prop_getIELTSLevelDataMap = once $ monadicIO $ do
 prop_getCSVInputData :: CSVInputList -> Property
 prop_getCSVInputData (CSVInputList xs) = monadicIO $ do
     csvInputData <- run $ do
-        (path, h) <- openTempFile "/tmp" "quickcheck.tmp"
+        dir <- getTemporaryDirectory
+        (path, h) <- openTempFile dir "quickcheck.tmp"
         BL.hPut h $ encode xs
         hClose h
         csvInputData <- getCSVInputData path
