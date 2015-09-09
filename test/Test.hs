@@ -1,8 +1,8 @@
-import TestParse (testParse)
+import TestTypes (testTypes)
 import TestCalc (testCalc)
 import TestIOActions (testIOActions)
 
 main :: IO Bool
 main = do
-    b <- sequence [testParse, testCalc, testIOActions]
+    b <- sequence [testTypes, testCalc, testIOActions]
     return $ and b

@@ -55,7 +55,7 @@ test-suite calc-test
   type:                 exitcode-stdio-1.0
   main-is:              Test.hs
   hs-source-dirs:       test
-  other-modules:        TestParse
+  other-modules:        TestTypes
                       , TestCalc
                       , TestIOActions
                       , Util

@@ -1,6 +1,6 @@
 {-# LANGUAGE TemplateHaskell #-}
 
-module TestParse (testParse) where
+module TestTypes (testTypes) where
 
 import Util (utf8EncodedFieldData, TargetList(..), DefaultToZeroList(..))
 
@@ -172,5 +172,5 @@ prop_toRecordCSVOutput o@(CSVOutput i r) = o' == V.snoc i' (enc r)
 
 return []
 
-testParse :: IO Bool
-testParse = $quickCheckAll
+testTypes :: IO Bool
+testTypes = $quickCheckAll

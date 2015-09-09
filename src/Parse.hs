@@ -18,8 +18,8 @@ import qualified Data.Map.Strict as M
 import qualified Data.Vector as V
 
 parseCSVDataMatrix :: Matrix -> (Either String (V.Vector ScoreTarget), Either String (V.Vector ScoreGroup))
-parseCSVDataMatrix m            = (actualScoreTargets, actualScoreGroups)
-    where m'                    = V.filter (\v -> not $ V.null v || BL.null (v V.! 0)) m
+parseCSVDataMatrix m = (actualScoreTargets, actualScoreGroups)
+    where m' = V.filter (\v -> not $ V.null v || BL.null (v V.! 0)) m
           bytesToVector bs      = runParser (parseRecord $ V.map BL.toStrict bs)
           potentialScoreTargets = V.filter (\v -> BL.null (v V.! 1)) m'
           actualScoreTargets    = V.mapM bytesToVector potentialScoreTargets :: Either String (V.Vector ScoreTarget)
