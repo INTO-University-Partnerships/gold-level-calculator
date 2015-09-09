@@ -6,6 +6,10 @@ module Util
 , DefaultToZeroList(..)
 , CSVInputList(..)
 , CSVInputListLong(..)
+, ScoreTargetWrapper(..)
+, ScoreTargetList(..)
+, ScoreGroupWrapper(..)
+, ScoreGroupList(..)
 , ScoreTallys(..)
 , ieltsLevelDataMap
 ) where
@@ -24,8 +28,13 @@ import Types
     , targetRange
     , ScoreGroup(..)
     , CSVInput(..)
+    , targetsStartAtColumn
+    , enc
+    , encShow
     )
 
+import Control.Monad (replicateM)
+import Data.Csv (ToRecord(..), record)
 import Data.Text.Encoding (encodeUtf8)
 import Test.QuickCheck (Arbitrary(..), elements, choose, vectorOf, listOf)
 
@@ -47,11 +56,15 @@ pentatopeNumbers n = take n $ map (length . listsSummingToFour) [1..]
 utf8EncodedFieldData :: Show a => a -> BI.ByteString
 utf8EncodedFieldData = encodeUtf8 . T.pack . show
 
-newtype TargetList        = TargetList [Target] deriving Show
-newtype DefaultToZeroList = DefaultToZeroList [DefaultToZero] deriving Show
-newtype ScoreTallys       = ScoreTallys (IELTSLevel, [Int]) deriving Show
-newtype CSVInputList      = CSVInputList [CSVInput] deriving Show
-newtype CSVInputListLong  = CSVInputListLong [CSVInput] deriving Show
+newtype TargetList         = TargetList [Target] deriving Show
+newtype DefaultToZeroList  = DefaultToZeroList [DefaultToZero] deriving Show
+newtype ScoreTallys        = ScoreTallys (IELTSLevel, [Int]) deriving Show
+newtype CSVInputList       = CSVInputList [CSVInput] deriving Show
+newtype CSVInputListLong   = CSVInputListLong [CSVInput] deriving Show
+newtype ScoreTargetWrapper = ScoreTargetWrapper { unwrapScoreTarget :: ScoreTarget } deriving Show
+newtype ScoreTargetList    = ScoreTargetList [ScoreTargetWrapper] deriving Show
+newtype ScoreGroupWrapper  = ScoreGroupWrapper { unwrapScoreGroup :: ScoreGroup } deriving Show
+newtype ScoreGroupList     = ScoreGroupList [ScoreGroupWrapper] deriving Show
 
 instance Arbitrary TargetList where
     arbitrary = do
@@ -82,8 +95,46 @@ instance Arbitrary CSVInputList where
 
 instance Arbitrary CSVInputListLong where
     arbitrary = do
-        xs <- vectorOf 1000 $ arbitrary
+        n  <- choose (500, 1000)
+        xs <- vectorOf n $ arbitrary
         return $ CSVInputListLong xs
+
+instance Arbitrary ScoreTargetWrapper where
+    arbitrary = do
+        ielts <- arbitrary
+        (TargetList ts) <- arbitrary
+        return $ ScoreTargetWrapper $ ScoreTarget ielts $ V.fromList ts
+
+instance Arbitrary ScoreTargetList where
+    arbitrary = do
+        xs <- listOf arbitrary
+        return $ ScoreTargetList xs
+
+instance Arbitrary ScoreGroupWrapper where
+    arbitrary = do
+        ielts <- arbitrary
+        n     <- elements ["Over", "Threshold", "Middle", "Deep"]
+        [lsr, rsr] <- replicateM 2 arbitrary
+        [wsr, ssr] <- replicateM 2 arbitrary
+        (DefaultToZeroList cs) <- arbitrary
+        return $ ScoreGroupWrapper $ ScoreGroup ielts n lsr rsr wsr ssr $ V.fromList cs
+
+instance Arbitrary ScoreGroupList where
+    arbitrary = do
+        xs <- listOf arbitrary
+        return $ ScoreGroupList xs
+
+instance ToRecord ScoreTargetWrapper where
+    toRecord (ScoreTargetWrapper (ScoreTarget ielts vt)) = record l
+        where
+            l :: [BI.ByteString]
+            l = [encShow ielts] ++ map enc (replicate (targetsStartAtColumn - 1) "") ++ map encShow (V.toList vt)
+
+instance ToRecord ScoreGroupWrapper where
+    toRecord (ScoreGroupWrapper (ScoreGroup ielts n lsr rsr wsr ssr vc)) = record l
+        where
+            l :: [BI.ByteString]
+            l = [encShow ielts] ++ [enc n] ++ map encShow [lsr, rsr] ++ map encShow [wsr, ssr] ++ [enc ""] ++ map encShow (V.toList vc)
 
 l45LevelData :: (IELTSLevel, IELTSLevelData)
 l45LevelData = (l, IELTSLevelData scoreTarget scoreGroupMap)

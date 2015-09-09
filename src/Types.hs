@@ -14,6 +14,7 @@ module Types
 , NumericScoreRange(..)
 , LetterScoreRange(..)
 , enc
+, encShow
 , DefaultToZero(..)
 , BoolWrapper(..)
 , NumericScoreWrapper(..)
@@ -27,6 +28,7 @@ module Types
 , IELTSLevelDataMap
 , CSVInput(..)
 , CSVOutput(..)
+, targetsStartAtColumn
 , ieltsRange
 , targetRange
 , numericScoreRange
@@ -118,6 +120,9 @@ letterScoreRange = [A1, A1P, A2, A2P, B1, B1P, B2, B2P, C1, C1P, C2]
 
 enc :: String -> BI.ByteString
 enc = encodeUtf8 . T.pack
+
+encShow :: Show a => a -> BI.ByteString
+encShow = enc . show
 
 parseMultipleColumns :: FromField a => Record -> [Int] -> Parser (V.Vector a)
 parseMultipleColumns v xs = do
@@ -316,8 +321,6 @@ instance FromRecord CSVInput where
 instance ToRecord CSVInput where
     toRecord (CSVInput stu las fir cen pre (GOLDCalcParams ielts ls rs ws ss)) = record l
         where
-            encShow :: Show a => a -> BI.ByteString
-            encShow = enc . show
             l :: [BI.ByteString]
             l = map enc [stu, las, fir, cen] ++ [encShow pre] ++ [encShow ielts] ++ map encShow [ls, rs] ++ map encShow [ws, ss]
 
