@@ -57,8 +57,8 @@ prop_parseFieldIELTSLevelSuccess l =
         Right l' -> l == l'
         Left  _  -> False
 
-prop_parseFieldIELTSLevelFail :: String -> Bool
-prop_parseFieldIELTSLevelFail l =
+prop_parseFieldIELTSLevelFail :: String -> Property
+prop_parseFieldIELTSLevelFail l = (not $ elem l $ map show ieltsRange) ==>
     case runParser (parseField (encodeUtf8 . T.pack $ l) :: Parser IELTSLevel) of
         Right _ -> False
         Left  e -> msg `isInfixOf` e
@@ -92,8 +92,8 @@ prop_parseFieldLetterScoreSuccess ls =
         Right ls' -> ls' == ls
         Left  _   -> False
 
-prop_parseFieldLetterScoreFail :: String -> Bool
-prop_parseFieldLetterScoreFail f =
+prop_parseFieldLetterScoreFail :: String -> Property
+prop_parseFieldLetterScoreFail f = (not $ elem f $ map show letterScoreRange) ==>
     case runParser (parseField (encodeUtf8 $ T.pack f) :: Parser LetterScore) of
         Right _ -> False
         Left  e -> msg `isInfixOf` e
@@ -128,7 +128,7 @@ prop_parseFieldTargetSuccess t =
         Left  _  -> False
 
 prop_parseFieldTargetFail :: String -> Property
-prop_parseFieldTargetFail t = (not . null) t ==>
+prop_parseFieldTargetFail t = (not . null) t && (not $ elem t $ map show $ init targetRange) ==>
     case runParser (parseField (encodeUtf8 . T.pack $ t) :: Parser Target) of
         Right _ -> False
         Left  e -> msg `isInfixOf` e
