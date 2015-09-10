@@ -29,11 +29,18 @@ A command line programme to determine the GOLD level that users should be enroll
 
     build/calc-many --help
 
-#### Example
+#### Examples
 
-    $ build/calc-many --file "data/GOLD levels.csv" --users "data/GOLD users.csv"
-    Output file "GOLD users_output.csv" has been written to the current working directory
-    $ more GOLD\ users_output.csv
+    $ build/calc-many --file "data/GOLD levels.csv" --users "data/GOLD users good.csv"
+    Output file "GOLD users good_output.csv" has been written to the current working directory
+    $ more GOLD\ users\ good_output.csv
     1231231230,McGowan,Mike,Brighton,N,5.5,50,60,B1,B2+,GM1L2
     4564564560,"van Tienhoven",Sacha,Brighton,Y,4.5,40,70,A1+,C2,X
     7897897890,Nockles,Joe,Brighton,N,6.5,80,80,C1,C2,"No GOLD"
+
+    $ build/calc-many --file "data/GOLD levels.csv" --users "data/GOLD users bad.csv"
+    Row 1 has error ""5" is not one of [4.5, 5.0, 5.5, 6.0, 6.5]"
+    Row 2 has error ""101" is not in the range [0..100] inclusive"
+    Row 3 has error ""C2+" is not one of [A1, A1+, A2, A2+, B1, B1+, B2, B2+, C1, C1+, C2]"
+    Row 4 has error ""32.5" is not in the range [0..100] inclusive"
+    Something went wrong trying to load or parse the CSV users file
