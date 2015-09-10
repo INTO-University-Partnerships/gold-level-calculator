@@ -3,7 +3,7 @@
 module IOActions (getIELTSLevelDataMap, getCSVInputData, runOneCalculation, runManyCalculations) where
 
 import Calc (calcTarget, calcManyTargets)
-import Parse (parseCSVDataMatrix, toIELTSLevelDataMap)
+import Parse (parseCSVDataMatrix, toIELTSLevelDataMap, collectCSVInput)
 
 import Types
     ( OneCalcOpts(..)
@@ -19,6 +19,7 @@ import System.Directory (doesFileExist)
 import System.FilePath (takeBaseName, takeExtension)
 
 import qualified Data.ByteString.Lazy as BL
+import qualified Data.Csv.Streaming as CS
 import qualified Data.Map.Strict as M
 import qualified Data.Vector as V
 
@@ -50,11 +51,20 @@ getIELTSLevelDataMap f = do
 getCSVInputData :: FilePath -> IO (Maybe (V.Vector CSVInput))
 getCSVInputData f = do
     csvData <- BL.readFile f
-    case decode NoHeader csvData of
-        Left e -> do
-            putStrLn e
-            return Nothing
-        Right m -> (return . Just) m
+    let parsed = CS.decode NoHeader csvData :: CS.Records CSVInput
+    errorCount <- showCSVInputErrors 1 0 parsed
+    case errorCount of
+        0 -> return . Just $ collectCSVInput V.empty parsed
+        _ -> return Nothing
+    where
+        showCSVInputErrors :: Int -> Int -> CS.Records CSVInput -> IO Int
+        showCSVInputErrors _   count (CS.Nil  _ _)           = return count
+        showCSVInputErrors row count (CS.Cons r moreRecords) = do
+            case r of
+                Right _ -> showCSVInputErrors (row + 1) count moreRecords
+                Left  e -> do
+                    putStrLn $ "Row " ++ show row ++ " has error \"" ++ e ++ "\""
+                    showCSVInputErrors (row + 1) (count + 1) moreRecords
 
 runOneCalculation :: OneCalcOpts -> IO ()
 runOneCalculation (OneCalcOpts f ielts ls rs ws ss) = do
