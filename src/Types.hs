@@ -40,6 +40,7 @@ module Types
 
 import Control.Monad (mzero, replicateM)
 import Data.Csv (Parser, Record, FromField, parseField, FromRecord, ToRecord(..), parseRecord, record, runParser, (.!))
+import Data.List (intersperse)
 import Data.Text.Encoding (encodeUtf8, decodeUtf8)
 import Test.QuickCheck (Arbitrary(..), elements, vectorOf)
 
@@ -248,7 +249,7 @@ instance FromField BoolWrapper where
 instance FromField NumericScoreWrapper where
     parseField f = case AT.parseOnly (parseNumericScore <* AT.endOfInput) (decodeUtf8 f) of
         Right r -> pure $ NumericScoreWrapper r
-        Left _  -> mzero
+        Left  _ -> fail $ "\"" ++ T.unpack (decodeUtf8 f) ++ "\" is not in the range [0..100] inclusive"
 
 instance FromField IELTSLevel where
     parseField f
@@ -257,7 +258,7 @@ instance FromField IELTSLevel where
         | f == "5.5" = pure L55
         | f == "6.0" = pure L60
         | f == "6.5" = pure L65
-        | otherwise  = mzero
+        | otherwise  = fail $ "\"" ++ T.unpack (decodeUtf8 f) ++ "\" is not one of [" ++ (concat $ intersperse ", " $ map show ieltsRange) ++ "]"
 
 instance FromField Target where
     parseField f
@@ -268,22 +269,22 @@ instance FromField Target where
         | f == "X"       = pure X
         | f == "Alert"   = pure Alert
         | f == ""        = pure Blank
-        | otherwise      = mzero
+        | otherwise      = fail $ "\"" ++ T.unpack (decodeUtf8 f) ++ "\" is not one of [" ++ (concat $ intersperse ", " $ map show $ init targetRange) ++ "]"
 
 instance FromField LetterScore where
     parseField f = case AT.parseOnly (parseLetterScore <* AT.endOfInput) (decodeUtf8 f) of
         Right r -> pure r
-        Left _  -> mzero
+        Left  _ -> fail $ "\"" ++ T.unpack (decodeUtf8 f) ++ "\" is not one of [" ++ (concat $ intersperse ", " $ map show letterScoreRange) ++ "]"
 
 instance FromField LetterScoreRange where
     parseField f = case AT.parseOnly (parseLetterScoreRange <* AT.endOfInput) (decodeUtf8 f) of
         Right r -> pure r
-        Left _  -> mzero
+        Left  _ -> fail $ "\"" ++ T.unpack (decodeUtf8 f) ++ "\" is not a valid letter score range"
 
 instance FromField NumericScoreRange where
     parseField f = case AT.parseOnly (parseNumericScoreRange <* AT.endOfInput) (decodeUtf8 f) of
         Right r -> pure r
-        Left _  -> mzero
+        Left  _ -> fail $ "\"" ++ T.unpack (decodeUtf8 f) ++ "\" is not a valid numeric score range"
 
 instance FromRecord ScoreTarget where
     parseRecord v

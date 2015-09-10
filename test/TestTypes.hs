@@ -16,10 +16,15 @@ import Types
     , GOLDCalcParams(..)
     , BoolWrapper
     , NumericScoreWrapper(..)
+    , LetterScore(..)
     , enc
+    , ieltsRange
+    , targetRange
+    , letterScoreRange
     )
 
 import Data.Csv (Parser, parseField, parseRecord, runParser, toRecord)
+import Data.List (intersperse, isInfixOf)
 import Data.Text.Encoding (encodeUtf8)
 import Test.QuickCheck (Property, (==>))
 import Test.QuickCheck.All (quickCheckAll)
@@ -43,7 +48,8 @@ prop_parseFieldNumericScoreWrapperFail :: Int -> Property
 prop_parseFieldNumericScoreWrapperFail n = n < 0 || n > 100 ==>
     case runParser (parseField (utf8EncodedFieldData n) :: Parser NumericScoreWrapper) of
         Right _ -> False
-        Left  _ -> True
+        Left  e -> msg `isInfixOf` e
+    where msg = "\"" ++ show n ++ "\" is not in the range [0..100] inclusive"
 
 prop_parseFieldIELTSLevelSuccess :: IELTSLevel -> Bool
 prop_parseFieldIELTSLevelSuccess l =
@@ -51,11 +57,12 @@ prop_parseFieldIELTSLevelSuccess l =
         Right l' -> l == l'
         Left  _  -> False
 
-prop_parseFieldIELTSLevelFail :: String -> Property
-prop_parseFieldIELTSLevelFail l = l /= show l ==>
-    case runParser (parseField (utf8EncodedFieldData l) :: Parser IELTSLevel) of
+prop_parseFieldIELTSLevelFail :: String -> Bool
+prop_parseFieldIELTSLevelFail l =
+    case runParser (parseField (encodeUtf8 . T.pack $ l) :: Parser IELTSLevel) of
         Right _ -> False
-        Left  _ -> True
+        Left  e -> msg `isInfixOf` e
+    where msg = "\"" ++ l ++ "\" is not one of [" ++ (concat $ intersperse ", " $ map show ieltsRange) ++ "]"
 
 prop_parseFieldNumericScoreRangeSuccess :: NumericScoreRange -> Bool
 prop_parseFieldNumericScoreRangeSuccess nsr@(NumericScoreRange lower upper) =
@@ -68,14 +75,29 @@ prop_parseFieldNumericScoreRangeLowerGTUpperFail :: NumericScoreRange -> Propert
 prop_parseFieldNumericScoreRangeLowerGTUpperFail (NumericScoreRange lower upper) = upper > lower ==>
     case runParser (parseField (encodeUtf8 $ T.pack f) :: Parser NumericScoreRange) of
         Right _ -> False
-        Left  _ -> True
-    where f = show $ NumericScoreRange upper lower
+        Left  e -> msg `isInfixOf` e
+    where f   = show $ NumericScoreRange upper lower
+          msg = "\"" ++ f ++ "\" is not a valid numeric score range"
 
 prop_parseFieldNumericScoreRangeFail :: String -> Bool
 prop_parseFieldNumericScoreRangeFail f =
     case runParser (parseField (encodeUtf8 $ T.pack f) :: Parser NumericScoreRange) of
         Right _ -> False
-        Left  _ -> True
+        Left  e -> msg `isInfixOf` e
+    where msg = "\"" ++ f ++ "\" is not a valid numeric score range"
+
+prop_parseFieldLetterScoreSuccess :: LetterScore -> Bool
+prop_parseFieldLetterScoreSuccess ls =
+    case runParser (parseField (utf8EncodedFieldData ls) :: Parser LetterScore) of
+        Right ls' -> ls' == ls
+        Left  _   -> False
+
+prop_parseFieldLetterScoreFail :: String -> Bool
+prop_parseFieldLetterScoreFail f =
+    case runParser (parseField (encodeUtf8 $ T.pack f) :: Parser LetterScore) of
+        Right _ -> False
+        Left  e -> msg `isInfixOf` e
+    where msg = "\"" ++ f ++ "\" is not one of [" ++ (concat $ intersperse ", " $ map show letterScoreRange) ++ "]"
 
 prop_parseFieldLetterScoreRangeSuccess :: LetterScoreRange -> Bool
 prop_parseFieldLetterScoreRangeSuccess lsr@(LetterScoreRange lower upper) =
@@ -88,14 +110,16 @@ prop_parseFieldLetterScoreRangeLowerGTUpperFail :: LetterScoreRange -> Property
 prop_parseFieldLetterScoreRangeLowerGTUpperFail (LetterScoreRange lower upper) = upper > lower ==>
     case runParser (parseField (encodeUtf8 $ T.pack f) :: Parser LetterScoreRange) of
         Right _ -> False
-        Left  _ -> True
-    where f = show $ LetterScoreRange upper lower
+        Left  e -> msg `isInfixOf` e
+    where f   = show $ LetterScoreRange upper lower
+          msg = "\"" ++ f ++ "\" is not a valid letter score range"
 
 prop_parseFieldLetterScoreRangeFail :: String -> Bool
 prop_parseFieldLetterScoreRangeFail f =
     case runParser (parseField (encodeUtf8 $ T.pack f) :: Parser LetterScoreRange) of
         Right _ -> False
-        Left  _ -> True
+        Left  e -> msg `isInfixOf` e
+    where msg = "\"" ++ f ++ "\" is not a valid letter score range"
 
 prop_parseFieldTargetSuccess :: Target -> Bool
 prop_parseFieldTargetSuccess t =
@@ -104,10 +128,11 @@ prop_parseFieldTargetSuccess t =
         Left  _  -> False
 
 prop_parseFieldTargetFail :: String -> Property
-prop_parseFieldTargetFail t = t /= show t ==>
-    case runParser (parseField (utf8EncodedFieldData t) :: Parser Target) of
+prop_parseFieldTargetFail t = (not . null) t ==>
+    case runParser (parseField (encodeUtf8 . T.pack $ t) :: Parser Target) of
         Right _ -> False
-        Left  _ -> True
+        Left  e -> msg `isInfixOf` e
+    where msg = "\"" ++ t ++ "\" is not one of [" ++ (concat $ intersperse ", " $ map show $ init targetRange) ++ "]"
 
 prop_parseRecordScoreTargetSuccess :: IELTSLevel -> TargetList -> Bool
 prop_parseRecordScoreTargetSuccess l (TargetList ts) =
