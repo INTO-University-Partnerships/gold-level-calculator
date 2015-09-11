@@ -48,20 +48,20 @@ getIELTSLevelDataMap f = do
             (vst, vsg) <- (processCSVDataMatrix . parseCSVDataMatrix) m
             (return . Just) $ toIELTSLevelDataMap vst vsg
 
-showCSVInputErrors :: Int -> Int -> CS.Records CSVInput -> IO Int
-showCSVInputErrors _   count (CS.Nil  _ _)           = return count
-showCSVInputErrors row count (CS.Cons r moreRecords) = do
+getCSVInputErrorCount :: Int -> Int -> CS.Records CSVInput -> IO Int
+getCSVInputErrorCount _   count (CS.Nil  _ _)           = return count
+getCSVInputErrorCount row count (CS.Cons r moreRecords) = do
     case r of
-        Right _ -> showCSVInputErrors (row + 1) count moreRecords
+        Right _ -> getCSVInputErrorCount (row + 1) count moreRecords
         Left  e -> do
             putStrLn $ "Row " ++ show row ++ " has error \"" ++ e ++ "\""
-            showCSVInputErrors (row + 1) (count + 1) moreRecords
+            getCSVInputErrorCount (row + 1) (count + 1) moreRecords
 
 getCSVInputData :: FilePath -> IO (Maybe (V.Vector CSVInput))
 getCSVInputData f = do
     csvData <- BL.readFile f
     let parsed = CS.decode NoHeader csvData :: CS.Records CSVInput
-    errorCount <- showCSVInputErrors 1 0 parsed
+    errorCount <- getCSVInputErrorCount 1 0 parsed
     case errorCount of
         0 -> return . Just $ collectCSVInput V.empty parsed
         _ -> return Nothing
