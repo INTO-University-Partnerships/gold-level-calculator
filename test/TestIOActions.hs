@@ -15,7 +15,10 @@ import Types
     )
 
 import Data.Csv (encode)
+import Data.List (intersperse, isInfixOf)
 import Data.Maybe (fromJust)
+import Data.Text (pack)
+import Data.Text.Encoding (encodeUtf8)
 import System.FilePath (takeBaseName, takeExtension)
 import System.Directory (getTemporaryDirectory, removeFile)
 import System.IO (openTempFile, hClose)
@@ -35,8 +38,8 @@ prop_getIELTSLevelDataMap = once $ monadicIO $ do
     ieltsLevelDataMap' <- run $ getIELTSLevelDataMap csvDataFile
     assert $ fromJust ieltsLevelDataMap' == ieltsLevelDataMap
 
-prop_getCSVInputData :: CSVInputList -> Property
-prop_getCSVInputData (CSVInputList xs) = monadicIO $ do
+prop_getCSVInputDataSuccess :: CSVInputList -> Property
+prop_getCSVInputDataSuccess (CSVInputList xs) = monadicIO $ do
     csvInputData <- run $ do
         dir <- getTemporaryDirectory
         (path, h) <- openTempFile dir "quickcheck.tmp"
@@ -46,6 +49,29 @@ prop_getCSVInputData (CSVInputList xs) = monadicIO $ do
         removeFile path
         return csvInputData
     assert $ fromJust csvInputData == V.fromList xs
+
+prop_getCSVInputDataFail :: Property
+prop_getCSVInputDataFail = once $ monadicIO $ do
+    (captured, _) <- run $ capture $ do
+        dir <- getTemporaryDirectory
+        (path, h) <- openTempFile dir "quickcheck.tmp"
+        BL.hPut h $ BL.fromStrict . encodeUtf8 . pack . concat . intersperse "\r\n" $
+            [ ",,,,N,5,50,60,B1,B2+"
+            , ",,,,Y,4.5,101,70,A1+,C2"
+            , ",,,,N,6.5,80,80,C1,C2+"
+            , ",,,,Y,4.5,32.5,40,A2,A2+"
+            , ",,,,Yes,5.5,50,50,B2,B2"
+            ]
+        hClose h
+        _ <- getCSVInputData path
+        removeFile path
+    assert $ and $ map (\e -> e `isInfixOf` captured)
+        [ "Row 1 has error \"\"5\" is not one of [4.5, 5.0, 5.5, 6.0, 6.5]\""
+        , "Row 2 has error \"\"101\" is not an integer in the range [0..100] inclusive\""
+        , "Row 3 has error \"\"C2+\" is not one of [A1, A1+, A2, A2+, B1, B1+, B2, B2+, C1, C1+, C2]\""
+        , "Row 4 has error \"\"32.5\" is not an integer in the range [0..100] inclusive\""
+        , "Row 5 has error \"\"Yes\" is not one of ['Y', 'N']\""
+        ]
 
 prop_runOneCalculation :: IELTSLevel -> NumericScoreWrapper -> NumericScoreWrapper -> LetterScore -> LetterScore -> Property
 prop_runOneCalculation i (NumericScoreWrapper ls) (NumericScoreWrapper rs) ws ss = monadicIO $ do
