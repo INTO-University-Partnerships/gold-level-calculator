@@ -36,7 +36,7 @@ toIELTSLevelDataMap vst vsg = M.fromList $ V.toList $ V.map (\(ScoreTarget l _) 
 
 collectCSVInput :: V.Vector CSVInput -> Records CSVInput -> V.Vector CSVInput
 collectCSVInput v (Nil _ _) = v
-collectCSVInput v (Cons e moreRecords) =
-    case e of
+collectCSVInput v (Cons r moreRecords) =
+    case r of
         Right i -> collectCSVInput (V.snoc v i) moreRecords
         Left  _ -> collectCSVInput v moreRecords

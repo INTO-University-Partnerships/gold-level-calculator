@@ -244,12 +244,15 @@ instance FromField DefaultToZero where
 instance FromField BoolWrapper where
     parseField f
         | f == "Y"  = pure $ BoolWrapper True
-        | otherwise = pure $ BoolWrapper False
+        | f == "y"  = pure $ BoolWrapper True
+        | f == "N"  = pure $ BoolWrapper False
+        | f == "n"  = pure $ BoolWrapper False
+        | otherwise = fail $ "\"" ++ T.unpack (decodeUtf8 f) ++ "\" is not one of ['Y', 'N']"
 
 instance FromField NumericScoreWrapper where
     parseField f = case AT.parseOnly (parseNumericScore <* AT.endOfInput) (decodeUtf8 f) of
         Right r -> pure $ NumericScoreWrapper r
-        Left  _ -> fail $ "\"" ++ T.unpack (decodeUtf8 f) ++ "\" is not in the range [0..100] inclusive"
+        Left  _ -> fail $ "\"" ++ T.unpack (decodeUtf8 f) ++ "\" is not an integer in the range [0..100] inclusive"
 
 instance FromField IELTSLevel where
     parseField f

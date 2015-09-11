@@ -48,6 +48,15 @@ getIELTSLevelDataMap f = do
             (vst, vsg) <- (processCSVDataMatrix . parseCSVDataMatrix) m
             (return . Just) $ toIELTSLevelDataMap vst vsg
 
+showCSVInputErrors :: Int -> Int -> CS.Records CSVInput -> IO Int
+showCSVInputErrors _   count (CS.Nil  _ _)           = return count
+showCSVInputErrors row count (CS.Cons r moreRecords) = do
+    case r of
+        Right _ -> showCSVInputErrors (row + 1) count moreRecords
+        Left  e -> do
+            putStrLn $ "Row " ++ show row ++ " has error \"" ++ e ++ "\""
+            showCSVInputErrors (row + 1) (count + 1) moreRecords
+
 getCSVInputData :: FilePath -> IO (Maybe (V.Vector CSVInput))
 getCSVInputData f = do
     csvData <- BL.readFile f
@@ -56,15 +65,6 @@ getCSVInputData f = do
     case errorCount of
         0 -> return . Just $ collectCSVInput V.empty parsed
         _ -> return Nothing
-    where
-        showCSVInputErrors :: Int -> Int -> CS.Records CSVInput -> IO Int
-        showCSVInputErrors _   count (CS.Nil  _ _)           = return count
-        showCSVInputErrors row count (CS.Cons r moreRecords) = do
-            case r of
-                Right _ -> showCSVInputErrors (row + 1) count moreRecords
-                Left  e -> do
-                    putStrLn $ "Row " ++ show row ++ " has error \"" ++ e ++ "\""
-                    showCSVInputErrors (row + 1) (count + 1) moreRecords
 
 runOneCalculation :: OneCalcOpts -> IO ()
 runOneCalculation (OneCalcOpts f ielts ls rs ws ss) = do

@@ -32,11 +32,18 @@ import Test.QuickCheck.All (quickCheckAll)
 import qualified Data.Text as T
 import qualified Data.Vector as V
 
-prop_parseFieldBoolWrapper :: BoolWrapper -> Bool
-prop_parseFieldBoolWrapper b =
+prop_parseFieldBoolWrapperSuccess :: BoolWrapper -> Bool
+prop_parseFieldBoolWrapperSuccess b =
     case runParser (parseField (utf8EncodedFieldData b) :: Parser BoolWrapper) of
         Right b' -> b == b'
         Left  _  -> False
+
+prop_parseFieldBoolWrapperFail :: Char -> Property
+prop_parseFieldBoolWrapperFail f = (not $ elem f ['Y', 'y', 'N', 'n']) ==>
+    case runParser (parseField (encodeUtf8 $ T.pack [f]) :: Parser BoolWrapper) of
+        Right _ -> False
+        Left  e -> msg `isInfixOf` e
+    where msg = "\"" ++ [f] ++ "\" is not one of ['Y', 'N']"
 
 prop_parseFieldNumericScoreWrapperSuccess :: NumericScoreWrapper -> Bool
 prop_parseFieldNumericScoreWrapperSuccess (NumericScoreWrapper n) =
@@ -49,7 +56,7 @@ prop_parseFieldNumericScoreWrapperFail n = n < 0 || n > 100 ==>
     case runParser (parseField (utf8EncodedFieldData n) :: Parser NumericScoreWrapper) of
         Right _ -> False
         Left  e -> msg `isInfixOf` e
-    where msg = "\"" ++ show n ++ "\" is not in the range [0..100] inclusive"
+    where msg = "\"" ++ show n ++ "\" is not an integer in the range [0..100] inclusive"
 
 prop_parseFieldIELTSLevelSuccess :: IELTSLevel -> Bool
 prop_parseFieldIELTSLevelSuccess l =
