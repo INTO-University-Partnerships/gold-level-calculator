@@ -87,7 +87,7 @@ prop_calcManyTargetsOutputEchosInput (CSVInputList xs) = V.and $ V.zipWith f xs'
           f csvInput (CSVOutput csvInput' _) = csvInput == csvInput'
 
 prop_calcManyTargetsLastColumnHasResult :: CSVInputList -> Property
-prop_calcManyTargetsLastColumnHasResult (CSVInputList xs) = (not . null) xs  ==> V.all (\(CSVOutput _ r) -> r `elem` resultRange) result
+prop_calcManyTargetsLastColumnHasResult (CSVInputList xs) = (not . null $ xs) ==> V.all (\(CSVOutput _ r) -> r `elem` resultRange) result
     where result = calcManyTargets ieltsLevelDataMap $ V.fromList xs
 
 prop_calcManyTargetsSetsModule2IfPreviouslyOnGOLD :: CSVInputListLong -> Bool

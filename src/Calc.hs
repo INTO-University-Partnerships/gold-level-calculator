@@ -60,10 +60,10 @@ calcTargetIndices msg mst =
 calcTargetIndex :: [[Int]] -> Maybe Int
 calcTargetIndex xss =
     case f of
-        [_] -> Just $ (head . head) f
+        [_] -> Just . head . head $ f
         _   -> Nothing
     where n = length xss
-          f = filter (\xs -> length xs == n) $ (group . sort . concat) xss
+          f = filter (\xs -> length xs == n) $ group . sort . concat $ xss
 
 calcTarget :: IELTSLevelData -> ListeningScore -> ReadingScore -> WritingScore -> SpeakingScore -> Maybe Target
 calcTarget (IELTSLevelData (ScoreTarget _ v) msg) ls rs ws ss = do

@@ -135,7 +135,7 @@ prop_parseFieldTargetSuccess t =
         Left  _  -> False
 
 prop_parseFieldTargetFail :: String -> Property
-prop_parseFieldTargetFail t = (not . null) t && (not $ elem t $ map show $ init targetRange) ==>
+prop_parseFieldTargetFail t = (not . null $ t) && (not $ elem t $ map show $ init targetRange) ==>
     case runParser (parseField (encodeUtf8 . T.pack $ t) :: Parser Target) of
         Right _ -> False
         Left  e -> msg `isInfixOf` e

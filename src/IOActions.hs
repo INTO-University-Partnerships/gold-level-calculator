@@ -45,8 +45,8 @@ getIELTSLevelDataMap f = do
             putStrLn e
             return Nothing
         Right m -> do
-            (vst, vsg) <- (processCSVDataMatrix . parseCSVDataMatrix) m
-            (return . Just) $ toIELTSLevelDataMap vst vsg
+            (vst, vsg) <- processCSVDataMatrix . parseCSVDataMatrix $ m
+            return . Just $ toIELTSLevelDataMap vst vsg
 
 getCSVInputErrorCount :: Int -> Int -> CS.Records CSVInput -> IO Int
 getCSVInputErrorCount _   count (CS.Nil  _ _)           = return count
@@ -86,7 +86,7 @@ generateOutputFile f ieltsLevelDataMap csvInputData = do
     case exists of
         True  -> putStrLn $ "Output file \"" ++ outputFile ++ "\" already exists"
         False -> do
-            let encoded = (encode . V.toList) $ calcManyTargets ieltsLevelDataMap csvInputData
+            let encoded = encode . V.toList $ calcManyTargets ieltsLevelDataMap csvInputData
             BL.writeFile (takeBaseName f ++ postfix ++ takeExtension f) encoded
             putStrLn $ "Output file \"" ++ outputFile ++ "\" has been written to the current working directory"
     where postfix = "_output"
