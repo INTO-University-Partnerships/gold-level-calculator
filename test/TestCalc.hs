@@ -1,6 +1,6 @@
 {-# LANGUAGE TemplateHaskell #-}
 
-module TestCalc (testCalc, prop_calcManyTargetsSetsModule2IfPreviouslyOnGOLD) where
+module TestCalc (testCalc) where
 
 import Util (pentatopeNumbers, ScoreTallys(..), ieltsLevelDataMap, CSVInputList(..), CSVInputListLong(..))
 import Calc (calcScoreTallys, calcTargetIndices, calcTargetIndex, calcTarget, calcManyTargets)

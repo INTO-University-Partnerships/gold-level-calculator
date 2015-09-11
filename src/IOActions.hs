@@ -31,11 +31,11 @@ processCSVDataMatrix (st, sg) = do
         Right rvst -> do
             case sg of
                 Left  evsg -> showErrorAndReturnEmptyVectors evsg
-                Right rvsg -> return $ (rvst, rvsg)
+                Right rvsg -> return (rvst, rvsg)
     where
         showErrorAndReturnEmptyVectors e = do
             putStrLn e
-            return $ (V.empty, V.empty)
+            return (V.empty, V.empty)
 
 getIELTSLevelDataMap :: FilePath -> IO (Maybe IELTSLevelDataMap)
 getIELTSLevelDataMap f = do
