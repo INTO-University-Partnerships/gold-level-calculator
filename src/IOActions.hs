@@ -81,15 +81,15 @@ runOneCalculation (OneCalcOpts f ielts ls rs ws ss) = do
 
 generateOutputFile :: FilePath -> IELTSLevelDataMap -> V.Vector CSVInput -> IO ()
 generateOutputFile f ieltsLevelDataMap csvInputData = do
-    let outputFile = takeBaseName f ++ postfix ++ takeExtension f
     exists <- doesFileExist outputFile
     case exists of
         True  -> putStrLn $ "Output file \"" ++ outputFile ++ "\" already exists"
         False -> do
             let encoded = encode . V.toList $ calcManyTargets ieltsLevelDataMap csvInputData
-            BL.writeFile (takeBaseName f ++ postfix ++ takeExtension f) encoded
+            BL.writeFile outputFile encoded
             putStrLn $ "Output file \"" ++ outputFile ++ "\" has been written to the current working directory"
-    where postfix = "_output"
+    where postfix    = "_output"
+          outputFile = takeBaseName f ++ postfix ++ takeExtension f
 
 runManyCalculations :: ManyCalcOpts -> IO ()
 runManyCalculations (ManyCalcOpts f g) = do
