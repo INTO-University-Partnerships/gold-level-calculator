@@ -8,6 +8,8 @@ import Types
     ( Matrix
     , ScoreTarget(..)
     , ScoreGroup(..)
+    , ScoreGroupMap
+    , IELTSLevel
     , IELTSLevelData(..)
     , IELTSLevelDataMap
     , CSVInput
@@ -30,9 +32,13 @@ parseCSVDataMatrix m = (actualScoreTargets, actualScoreGroups)
           actualScoreGroups     = V.mapM bytesToVector potentialScoreGroups :: Either String (V.Vector ScoreGroup)
 
 toIELTSLevelDataMap :: V.Vector ScoreTarget -> V.Vector ScoreGroup -> IELTSLevelDataMap
-toIELTSLevelDataMap vst vsg = M.fromList $ V.toList $ V.map (\(ScoreTarget l _) -> (l, getIELTSLevelData l)) vst
-    where getIELTSLevelData l = IELTSLevelData (V.head $ V.filter (\(ScoreTarget lvl _) -> lvl == l) vst) scoreGroupMap
-            where scoreGroupMap = M.fromList $ V.toList $ V.map (\sg -> (scoreGroupName sg, sg)) $ V.filter (\sg -> scoreGroupLevel sg == l) vsg
+toIELTSLevelDataMap vst vsg = M.fromList . V.toList $ V.map (\(ScoreTarget l _) -> (l, getIELTSLevelData l)) vst
+    where
+        getIELTSLevelData :: IELTSLevel -> IELTSLevelData
+        getIELTSLevelData l = IELTSLevelData (V.head $ V.filter (\(ScoreTarget lvl _) -> lvl == l) vst) scoreGroupMap
+            where
+                scoreGroupMap :: ScoreGroupMap
+                scoreGroupMap = M.fromList . V.toList $ V.map (\sg -> (scoreGroupName sg, sg)) $ V.filter (\sg -> scoreGroupLevel sg == l) vsg
 
 collectCSVInput :: V.Vector CSVInput -> Records CSVInput -> V.Vector CSVInput
 collectCSVInput v (Nil _ _) = v
