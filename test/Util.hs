@@ -1,18 +1,18 @@
 module Util
-( listsSummingToFour
-, pentatopeNumbers
-, utf8EncodedFieldData
-, TargetList(..)
-, DefaultToZeroList(..)
-, CSVInputList(..)
-, CSVInputListLong(..)
-, ScoreTargetWrapper(..)
-, ScoreTargetList(..)
-, ScoreGroupWrapper(..)
-, ScoreGroupList(..)
-, ScoreTallys(..)
-, ieltsLevelDataMap
-) where
+    ( listsSummingToFour
+    , pentatopeNumbers
+    , utf8EncodedFieldData
+    , TargetList(..)
+    , DefaultToZeroList(..)
+    , CSVInputList(..)
+    , CSVInputListLong(..)
+    , ScoreTargetWrapper(..)
+    , ScoreTargetList(..)
+    , ScoreGroupWrapper(..)
+    , ScoreGroupList(..)
+    , ScoreTallys(..)
+    , ieltsLevelDataMap
+    ) where
 
 import Types
     ( Target

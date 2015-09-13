@@ -1,6 +1,11 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module IOActions (getIELTSLevelDataMap, getCSVInputData, runOneCalculation, runManyCalculations) where
+module IOActions
+    ( getIELTSLevelDataMap
+    , getCSVInputData
+    , runOneCalculation
+    , runManyCalculations
+    ) where
 
 import Calc (calcTarget, calcManyTargets)
 import Parse (parseCSVDataMatrix, toIELTSLevelDataMap, collectCSVInput)

@@ -1,8 +1,8 @@
 module Parse
-( parseCSVDataMatrix
-, toIELTSLevelDataMap
-, collectCSVInput
-) where
+    ( parseCSVDataMatrix
+    , toIELTSLevelDataMap
+    , collectCSVInput
+    ) where
 
 import Types
     ( Matrix

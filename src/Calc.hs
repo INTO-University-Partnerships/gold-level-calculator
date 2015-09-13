@@ -1,10 +1,10 @@
 module Calc
-( calcScoreTallys
-, calcTargetIndices
-, calcTargetIndex
-, calcTarget
-, calcManyTargets
-) where
+    ( calcScoreTallys
+    , calcTargetIndices
+    , calcTargetIndex
+    , calcTarget
+    , calcManyTargets
+    ) where
 
 import Types
     ( GroupName

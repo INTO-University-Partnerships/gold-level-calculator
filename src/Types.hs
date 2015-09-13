@@ -1,41 +1,41 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Types
-( Matrix
-, IELTSLevel(..)
-, GroupName
-, NumericScore
-, LetterScore(..)
-, Target(..)
-, ListeningScore
-, ReadingScore
-, WritingScore
-, SpeakingScore
-, NumericScoreRange(..)
-, LetterScoreRange(..)
-, enc
-, encShow
-, DefaultToZero(..)
-, BoolWrapper(..)
-, NumericScoreWrapper(..)
-, OneCalcOpts(..)
-, ManyCalcOpts(..)
-, GOLDCalcParams(..)
-, ScoreTarget(..)
-, ScoreGroup(..)
-, ScoreGroupMap
-, IELTSLevelData(..)
-, IELTSLevelDataMap
-, CSVInput(..)
-, CSVOutput(..)
-, targetsStartAtColumn
-, ieltsRange
-, targetRange
-, numericScoreRange
-, letterScoreRange
-, resultRange
-, parseNumericScore
-, parseLetterScore
+    ( Matrix
+    , IELTSLevel(..)
+    , GroupName
+    , NumericScore
+    , LetterScore(..)
+    , Target(..)
+    , ListeningScore
+    , ReadingScore
+    , WritingScore
+    , SpeakingScore
+    , NumericScoreRange(..)
+    , LetterScoreRange(..)
+    , DefaultToZero(..)
+    , BoolWrapper(..)
+    , NumericScoreWrapper(..)
+    , OneCalcOpts(..)
+    , ManyCalcOpts(..)
+    , GOLDCalcParams(..)
+    , ScoreTarget(..)
+    , ScoreGroup(..)
+    , ScoreGroupMap
+    , IELTSLevelData(..)
+    , IELTSLevelDataMap
+    , CSVInput(..)
+    , CSVOutput(..)
+    , enc
+    , encShow
+    , targetsStartAtColumn
+    , ieltsRange
+    , targetRange
+    , numericScoreRange
+    , letterScoreRange
+    , resultRange
+    , parseNumericScore
+    , parseLetterScore
 ) where
 
 import Control.Monad (mzero, replicateM)
