@@ -1,22 +1,27 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module IOActions
-    ( getIELTSLevelDataMap
-    , getCSVInputData
-    , runOneCalculation
+    ( runOneCalculation
     , runManyCalculations
     ) where
 
 import Calc (calcTarget, calcManyTargets)
-import Parse (parseCSVDataMatrix, toIELTSLevelDataMap, collectCSVInput)
+
+import Parse
+    ( parseScoreTarget
+    , parseScoreGroup
+    , toIELTSLevelDataMap
+    , collectCSVInput
+    , hasCSVInputErrors
+    )
 
 import Types
-    ( OneCalcOpts(..)
+    ( Target
+    , OneCalcOpts(..)
     , ManyCalcOpts(..)
-    , ScoreTarget
-    , ScoreGroup
     , IELTSLevelDataMap
     , CSVInput(..)
+    , lookupIELTSLevel
     )
 
 import Data.Csv (decode, encode, HasHeader(..))
@@ -25,64 +30,7 @@ import System.FilePath (takeBaseName, takeExtension)
 
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Csv.Streaming as CS
-import qualified Data.Map.Strict as M
 import qualified Data.Vector as V
-
-processCSVDataMatrix :: (Either String (V.Vector ScoreTarget), Either String (V.Vector ScoreGroup))
-                        -> IO (V.Vector ScoreTarget, V.Vector ScoreGroup)
-processCSVDataMatrix (st, sg) = do
-    case st of
-        Left  evst -> showErrorAndReturnEmptyVectors evst
-        Right rvst -> do
-            case sg of
-                Left  evsg -> showErrorAndReturnEmptyVectors evsg
-                Right rvsg -> return (rvst, rvsg)
-    where
-        showErrorAndReturnEmptyVectors e = do
-            putStrLn e
-            return (V.empty, V.empty)
-
-getIELTSLevelDataMap :: FilePath -> IO (Maybe IELTSLevelDataMap)
-getIELTSLevelDataMap f = do
-    csvData <- BL.readFile f
-    case decode NoHeader csvData of
-        Left e -> do
-            putStrLn e
-            return Nothing
-        Right m -> do
-            (vst, vsg) <- processCSVDataMatrix . parseCSVDataMatrix $ m
-            return . Just $ toIELTSLevelDataMap vst vsg
-
-getCSVInputErrorCount :: Int -> Int -> CS.Records CSVInput -> IO Int
-getCSVInputErrorCount _   count (CS.Nil  _ _)           = return count
-getCSVInputErrorCount row count (CS.Cons r moreRecords) = do
-    case r of
-        Right _ -> getCSVInputErrorCount (row + 1) count moreRecords
-        Left  e -> do
-            putStrLn $ "Row " ++ show row ++ " has error \"" ++ e ++ "\""
-            getCSVInputErrorCount (row + 1) (count + 1) moreRecords
-
-getCSVInputData :: FilePath -> IO (Maybe (V.Vector CSVInput))
-getCSVInputData f = do
-    csvData <- BL.readFile f
-    let parsed = CS.decode NoHeader csvData :: CS.Records CSVInput
-    errorCount <- getCSVInputErrorCount 1 0 parsed
-    case errorCount of
-        0 -> return . Just $ collectCSVInput V.empty parsed
-        _ -> return Nothing
-
-runOneCalculation :: OneCalcOpts -> IO ()
-runOneCalculation (OneCalcOpts f ielts ls rs ws ss) = do
-    ieltsLevelDataMap <- getIELTSLevelDataMap f
-    case ieltsLevelDataMap of
-        Nothing -> putStrLn "Something went wrong trying to load or parse the CSV data file"
-        Just ieltsLevelDataMap' -> do
-            case M.lookup ielts ieltsLevelDataMap' of
-                Nothing -> putStrLn $ "IELTS level " ++ show ielts ++ " not found in IELTS level data map"
-                Just ld -> do
-                    case calcTarget ld ls rs ws ss of
-                        Nothing -> putStrLn "Something went wrong trying to calculate a score target"
-                        Just t  -> putStrLn $ show t
 
 generateOutputFile :: FilePath -> IELTSLevelDataMap -> V.Vector CSVInput -> IO ()
 generateOutputFile f ieltsLevelDataMap csvInputData = do
@@ -96,13 +44,34 @@ generateOutputFile f ieltsLevelDataMap csvInputData = do
     where postfix    = "_output"
           outputFile = takeBaseName f ++ postfix ++ takeExtension f
 
+runOneCalculation :: OneCalcOpts -> IO ()
+runOneCalculation (OneCalcOpts f ielts ls rs ws ss) = do
+    csvData <- BL.readFile f
+    case h csvData of
+        Left  e -> putStrLn e
+        Right t -> putStrLn $ show t
+    where
+        h :: BL.ByteString -> Either String Target
+        h csvData = do
+            m   <- decode NoHeader csvData
+            vst <- parseScoreTarget m
+            vsg <- parseScoreGroup m
+            ld  <- lookupIELTSLevel ielts $ toIELTSLevelDataMap vst vsg
+            calcTarget ld ls rs ws ss
+
 runManyCalculations :: ManyCalcOpts -> IO ()
 runManyCalculations (ManyCalcOpts f g) = do
-    ieltsLevelDataMap <- getIELTSLevelDataMap f
-    case ieltsLevelDataMap of
-        Nothing -> putStrLn "Something went wrong trying to load or parse the CSV data file"
-        Just ieltsLevelDataMap' -> do
-            csvInputData <- getCSVInputData g
-            case csvInputData of
-                Nothing -> putStrLn "Something went wrong trying to load or parse the CSV users file"
-                Just csvInputData' -> generateOutputFile g ieltsLevelDataMap' csvInputData'
+    csvData1 <- BL.readFile f
+    csvData2 <- BL.readFile g
+    case h csvData1 csvData2 of
+        Left e -> putStrLn e
+        Right (ieltsLevelDataMap, csvInputData) -> generateOutputFile g ieltsLevelDataMap csvInputData
+    where
+        h :: BL.ByteString -> BL.ByteString -> Either String (IELTSLevelDataMap, V.Vector CSVInput)
+        h csvData1 csvData2 = do
+            m   <- decode NoHeader csvData1
+            vst <- parseScoreTarget m
+            vsg <- parseScoreGroup m
+            _   <- hasCSVInputErrors 1 V.empty csvInputData
+            return (toIELTSLevelDataMap vst vsg, collectCSVInput V.empty csvInputData)
+            where csvInputData = CS.decode NoHeader csvData2

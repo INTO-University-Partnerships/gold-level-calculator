@@ -28,6 +28,7 @@ module Types
     , CSVOutput(..)
     , enc
     , encShow
+    , lookupIELTSLevel
     , targetsStartAtColumn
     , ieltsRange
     , targetRange
@@ -124,6 +125,12 @@ enc = encodeUtf8 . T.pack
 
 encShow :: Show a => a -> BI.ByteString
 encShow = enc . show
+
+lookupIELTSLevel :: IELTSLevel -> IELTSLevelDataMap -> Either String IELTSLevelData
+lookupIELTSLevel l m =
+    case M.lookup l m of
+        Nothing -> Left $ "IELTS level " ++ show l ++ " not found in IELTS level data map"
+        Just ld -> Right ld
 
 parseMultipleColumns :: FromField a => Record -> [Int] -> Parser (V.Vector a)
 parseMultipleColumns v xs = do

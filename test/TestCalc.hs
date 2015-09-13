@@ -2,7 +2,7 @@
 
 module TestCalc (testCalc) where
 
-import Util (pentatopeNumbers, ScoreTallys(..), ieltsLevelDataMap, CSVInputList(..), CSVInputListLong(..))
+import Util (pentatopeNumbers, fromRight, ScoreTallys(..), ieltsLevelDataMap, CSVInputList(..), CSVInputListLong(..))
 import Calc (calcScoreTallys, calcTargetIndices, calcTargetIndex, calcTarget, calcManyTargets)
 
 import Types
@@ -38,42 +38,42 @@ prop_calcScoreTallysSumsToFour l (NumericScoreWrapper ls) (NumericScoreWrapper r
 prop_calcTargetIndicesLengthEqualsScoreGroupLength :: ScoreTallys -> Bool
 prop_calcTargetIndicesLengthEqualsScoreGroupLength (ScoreTallys (l, xs)) = length result == M.size msg
     where (IELTSLevelData _ msg) = fromJust $ M.lookup l ieltsLevelDataMap
-          result = fromJust $ calcTargetIndices msg $ M.fromList $ zip (M.keys msg) xs
+          result = fromRight $ calcTargetIndices msg $ M.fromList $ zip (M.keys msg) xs
 
 prop_calcTargetIndicesHasIndicesInRange :: ScoreTallys -> Bool
 prop_calcTargetIndicesHasIndicesInRange (ScoreTallys (l, xs)) = minimum flattenedResult >= 0 && maximum flattenedResult < (pentatopeNumbers 5) !! (M.size msg)
     where (IELTSLevelData _ msg) = fromJust $ M.lookup l ieltsLevelDataMap
-          result = fromJust $ calcTargetIndices msg $ M.fromList $ zip (M.keys msg) xs
+          result = fromRight $ calcTargetIndices msg $ M.fromList $ zip (M.keys msg) xs
           flattenedResult = concat result
 
 prop_calcTargetIndicesFail :: ScoreTallys -> Bool
 prop_calcTargetIndicesFail (ScoreTallys (l, xs)) =
     case result of
-        Just _  -> False
-        Nothing -> True
+        Left  e -> e == "ScoreGroupMap and ScoreTallyMap keys are not the same (this shouldn't happen)"
+        Right _ -> False
     where (IELTSLevelData _ msg) = fromJust $ M.lookup l ieltsLevelDataMap
           result = calcTargetIndices msg $ M.fromList $ zip ["these", "keys", "are", "wrong"] xs
 
 prop_calcTargetIndexSuccess :: Positive Int -> Positive Int -> Bool
 prop_calcTargetIndexSuccess (Positive n) (Positive i) =
     case calcTargetIndex xss of
-        Just r  -> r == i
-        Nothing -> False
+        Right r -> r == i
+        Left  _ -> False
     where xss = replicate n [i]
 
 prop_calcTargetIndexFail :: Positive Int -> OrderedList (Positive Int) -> Property
 prop_calcTargetIndexFail (Positive n) (Ordered xs) = length xs' > 1 ==>
     case calcTargetIndex xss of
-        Nothing -> True
-        Just _  -> False
+        Left  _ -> True
+        Right _ -> False
     where xs' = nub $ map (\(Positive i) -> i) xs
           xss = replicate n xs'
 
 prop_calcTarget :: IELTSLevel -> NumericScoreWrapper -> NumericScoreWrapper -> LetterScore -> LetterScore -> Bool
 prop_calcTarget l (NumericScoreWrapper ls) (NumericScoreWrapper rs) ws ss =
     case calcTarget ld ls rs ws ss of
-        Nothing -> False
-        Just _  -> True
+        Left  _ -> False
+        Right _ -> True
     where ld = fromJust $ M.lookup l ieltsLevelDataMap
 
 prop_calcManyTargetsOutputSameLengthAsInput :: CSVInputList -> Bool

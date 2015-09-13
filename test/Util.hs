@@ -2,6 +2,7 @@ module Util
     ( listsSummingToFour
     , pentatopeNumbers
     , utf8EncodedFieldData
+    , fromRight
     , TargetList(..)
     , DefaultToZeroList(..)
     , CSVInputList(..)
@@ -55,6 +56,10 @@ pentatopeNumbers n = take n $ map (length . listsSummingToFour) [1..]
 
 utf8EncodedFieldData :: Show a => a -> BI.ByteString
 utf8EncodedFieldData = encodeUtf8 . T.pack . show
+
+fromRight :: Either a b -> b
+fromRight (Right x) = x
+fromRight (Left _)  = error "Right value expected (Left value matched)"
 
 newtype TargetList         = TargetList [Target] deriving Show
 newtype DefaultToZeroList  = DefaultToZeroList [DefaultToZero] deriving Show
