@@ -2,8 +2,22 @@
 
 module TestCalc (testCalc) where
 
-import Util (pentatopeNumbers, fromRight, ScoreTallys(..), ieltsLevelDataMap, CSVInputList(..), CSVInputListLong(..))
-import Calc (calcScoreTallys, calcTargetIndices, calcTargetIndex, calcTarget, calcManyTargets)
+import Util
+    ( pentatopeNumbers
+    , fromRight
+    , ScoreTallys(..)
+    , ieltsLevelDataMap
+    , CSVInputList(..)
+    , CSVInputListLong(..)
+    )
+
+import Calc
+    ( calcScoreTallys
+    , calcTargetIndices
+    , calcTargetIndex
+    , calcTarget
+    , calcManyTargets
+    )
 
 import Types
     ( IELTSLevel
