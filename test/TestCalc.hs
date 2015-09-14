@@ -30,7 +30,7 @@ import Types
     , resultRange
     )
 
-import Data.List (nub)
+import Data.List (nub, group, sort)
 import Data.Maybe (fromJust)
 import Test.QuickCheck (Property, (==>))
 import Test.QuickCheck.All (quickCheckAll)
@@ -78,9 +78,9 @@ prop_calcTargetIndexSuccess (Positive n) (Positive i) =
 prop_calcTargetIndexFail :: Positive Int -> OrderedList (Positive Int) -> Property
 prop_calcTargetIndexFail (Positive n) (Ordered xs) = length xs' > 1 ==>
     case calcTargetIndex xss of
-        Left  _ -> True
+        Left  e -> e == "No unique target index in " ++ show (group . sort . concat $ xss)
         Right _ -> False
-    where xs' = nub $ map (\(Positive i) -> i) xs
+    where xs' = nub $ map getPositive xs
           xss = replicate n xs'
 
 prop_calcTarget :: IELTSLevel -> NumericScoreWrapper -> NumericScoreWrapper -> LetterScore -> LetterScore -> Bool
