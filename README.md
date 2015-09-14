@@ -53,4 +53,3 @@ A command line programme to determine the GOLD level that users should be enroll
     Row 5 has error ""C2+" is not one of [A1, A1+, A2, A2+, B1, B1+, B2, B2+, C1, C1+, C2]"
     Row 7 has error ""32.5" is not an integer in the range [0..100] inclusive"
     Row 8 has error ""Yes" is not one of ['Y', 'N']"
-    Something went wrong trying to load or parse the CSV users file
