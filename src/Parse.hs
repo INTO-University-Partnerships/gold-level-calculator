@@ -2,8 +2,8 @@ module Parse
     ( parseScoreTarget
     , parseScoreGroup
     , toIELTSLevelDataMap
-    , collectCSVInput
-    , hasCSVInputErrors
+    , collectCSVInputData
+    , collectCSVInputErrors
     ) where
 
 import Types
@@ -50,19 +50,19 @@ toIELTSLevelDataMap vst vsg = M.fromList . V.toList $ V.map (\(ScoreTarget l _) 
                 scoreGroupMap :: ScoreGroupMap
                 scoreGroupMap = M.fromList . V.toList $ V.map (\sg -> (scoreGroupName sg, sg)) $ V.filter (\sg -> scoreGroupLevel sg == l) vsg
 
-collectCSVInput :: V.Vector CSVInput -> Records CSVInput -> V.Vector CSVInput
-collectCSVInput v (Nil _ _) = v
-collectCSVInput v (Cons r moreRecords) =
+collectCSVInputData :: V.Vector CSVInput -> Records CSVInput -> V.Vector CSVInput
+collectCSVInputData v (Nil _ _) = v
+collectCSVInputData v (Cons r moreRecords) =
     case r of
-        Right i -> collectCSVInput (V.snoc v i) moreRecords
-        Left  _ -> collectCSVInput v moreRecords
+        Right i -> collectCSVInputData (V.snoc v i) moreRecords
+        Left  _ -> collectCSVInputData v moreRecords
 
-hasCSVInputErrors :: Int -> V.Vector String -> CS.Records CSVInput -> Either String Bool
-hasCSVInputErrors _ v (CS.Nil _ _)
+collectCSVInputErrors :: Int -> V.Vector String -> CS.Records CSVInput -> Either String Bool
+collectCSVInputErrors _ v (CS.Nil _ _)
     | l == 0    = Right True
     | otherwise = Left $ V.foldl1 (\acc x -> acc ++ "\r\n" ++ x) v
     where l     = V.length v
-hasCSVInputErrors row v (CS.Cons r moreRecords) =
+collectCSVInputErrors row v (CS.Cons r moreRecords) =
     case r of
-        Right _ -> hasCSVInputErrors (row + 1) v moreRecords
-        Left  e -> hasCSVInputErrors (row + 1) (V.snoc v $ "Row " ++ show row ++ " has error \"" ++ e ++ "\"") moreRecords
+        Right _ -> collectCSVInputErrors (row + 1) v moreRecords
+        Left  e -> collectCSVInputErrors (row + 1) (V.snoc v $ "Row " ++ show row ++ " has error \"" ++ e ++ "\"") moreRecords
