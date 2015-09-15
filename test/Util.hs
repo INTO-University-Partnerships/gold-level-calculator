@@ -45,7 +45,7 @@ import qualified Data.Text as T
 import qualified Data.Vector as V
 
 listsSummingToFour :: Int -> [[Int]]
-listsSummingToFour n = filter (\xs -> sum xs == 4) $ zeroToFour n
+listsSummingToFour n = filter ((==) 4 . sum) $ zeroToFour n
     where
         zeroToFour :: Int -> [[Int]]
         zeroToFour 0 = [[]]

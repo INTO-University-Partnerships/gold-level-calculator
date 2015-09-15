@@ -65,7 +65,7 @@ prop_runManyCalculationsFail = once $ monadicIO $ do
         hClose h
         _ <- runManyCalculations (ManyCalcOpts csvDataFile path)
         removeFile path
-    assert $ and $ map (\e -> e `isInfixOf` captured)
+    assert $ and $ map (flip isInfixOf captured)
         [ "Row 1 has error \"\"5\" is not one of [4.5, 5.0, 5.5, 6.0, 6.5]\""
         , "Row 2 has error \"\"101\" is not an integer in the range [0..100] inclusive\""
         , "Row 3 has error \"\"C2+\" is not one of [A1, A1+, A2, A2+, B1, B1+, B2, B2+, C1, C1+, C2]\""

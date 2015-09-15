@@ -106,8 +106,8 @@ prop_calcManyTargetsLastColumnHasResult (CSVInputList xs) = (not . null $ xs) ==
 
 prop_calcManyTargetsSetsModule2IfPreviouslyOnGOLD :: CSVInputListLong -> Bool
 prop_calcManyTargetsSetsModule2IfPreviouslyOnGOLD (CSVInputListLong xs) = not (V.null result') && V.all f result'
-    where mod1    = filter (\s -> take 3 s == "GM1") resultRange
-          mod2    = filter (\s -> take 3 s == "GM2") resultRange
+    where mod1    = filter ((==) "GM1" . take 3) resultRange
+          mod2    = filter ((==) "GM2" . take 3) resultRange
           result  = calcManyTargets ieltsLevelDataMap $ V.fromList xs
           result' = V.filter (\(CSVOutput _ r) -> r `elem` mod1 ++ mod2) result
           f (CSVOutput (CSVInput _ _ _ _ (BoolWrapper p) _) r) = (p && r `elem` mod2) || (not p && r `elem` mod1)

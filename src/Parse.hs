@@ -48,7 +48,7 @@ toIELTSLevelDataMap vst vsg = M.fromList . V.toList $ V.map (\(ScoreTarget l _) 
         getIELTSLevelData l = IELTSLevelData (V.head $ V.filter (\(ScoreTarget lvl _) -> lvl == l) vst) scoreGroupMap
             where
                 scoreGroupMap :: ScoreGroupMap
-                scoreGroupMap = M.fromList . V.toList $ V.map (\sg -> (scoreGroupName sg, sg)) $ V.filter (\sg -> scoreGroupLevel sg == l) vsg
+                scoreGroupMap = M.fromList . V.toList $ V.map (\sg -> (scoreGroupName sg, sg)) $ V.filter ((==) l . scoreGroupLevel) vsg
 
 collectCSVInputData :: V.Vector CSVInput -> Records CSVInput -> V.Vector CSVInput
 collectCSVInputData v (Nil _ _) = v
