@@ -24,7 +24,7 @@ import Types
     , lookupIELTSLevel
     )
 
-import Data.Csv (decode, encode, HasHeader(..))
+import Data.Csv (decode, encodeWith, defaultEncodeOptions, EncodeOptions(..), Quoting(..), HasHeader(..))
 import System.Directory (doesFileExist)
 import System.FilePath (takeBaseName, takeExtension)
 
@@ -38,9 +38,10 @@ generateOutputFile f ieltsLevelDataMap csvInputData = do
     case exists of
         True  -> putStrLn $ "Output file \"" ++ outputFile ++ "\" already exists"
         False -> do
-            let encoded = encode . V.toList $ calcManyTargets ieltsLevelDataMap csvInputData
+            let encoded = encodeWith encodeOpts . V.toList $ calcManyTargets ieltsLevelDataMap csvInputData
             BL.writeFile outputFile encoded
             putStrLn $ "Output file \"" ++ outputFile ++ "\" has been written to the current working directory"
+            where encodeOpts = defaultEncodeOptions { encQuoting = QuoteAll }
     where postfix    = "_output"
           outputFile = takeBaseName f ++ postfix ++ takeExtension f
 

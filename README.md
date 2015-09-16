@@ -37,13 +37,13 @@ A command line programme to determine the GOLD level that users should be enroll
     Output file "GOLD users good_output.csv" has been written to the current working directory
 
     $ more GOLD\ users\ good_output.csv
-    1231231230,McGowan,Mike,Brighton,N,5.5,50,60,B1,B2+,GM1L2
-    4564564560,"van Tienhoven",Sacha,Brighton,Y,4.5,40,70,A1+,C2,X
-    7897897890,Nockles,Joe,Brighton,N,6.5,80,80,C1,C2,"No GOLD"
-    ,,,,N,4.5,35,35,A2,A2+,GM1L1
-    ,,,,N,6.5,70,65,B1+,B2,GM1L3
-    ,,,,Y,6.5,70,65,B1+,B2,GM2L3
-    ,,,,N,6.5,100,70,B2,A1,Alert
+    "1231231230","McGowan","Mike","Brighton","N","5.5","50","60","B1","B2+","GM1L2"
+    "4564564560","van Tienhoven","Sacha","Brighton","Y","4.5","40","70","A1+","C2","X"
+    "7897897890","Nockles","Joe","Brighton","N","6.5","80","80","C1","C2","No GOLD"
+    "","","","","N","4.5","35","35","A2","A2+","GM1L1"
+    "","","","","N","6.5","70","65","B1+","B2","GM1L3"
+    "","","","","Y","6.5","70","65","B1+","B2","GM2L3"
+    "","","","","N","6.5","100","70","B2","A1","Alert"
 
 #### Failure
 
