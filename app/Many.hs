@@ -1,27 +1,17 @@
 module Main where
 
-import Types (ManyCalcOpts(..))
 import IOActions (runManyCalculations)
+import OptParse (manyCalcOpts)
 
 import Options.Applicative
-    ( Parser
-    , execParser
-    , strOption
+    ( execParser
     , info
     , helper
     , progDesc
     , fullDesc
     , header
-    , long
-    , short
-    , help
     , (<>)
     )
-
-manyCalcOpts :: Parser ManyCalcOpts
-manyCalcOpts = ManyCalcOpts
-               <$> strOption (long "file"  <> short 'f' <> help "CSV data file mapping scores to targets")
-               <*> strOption (long "users" <> short 'u' <> help "CSV users file with one row per user")
 
 main :: IO ()
 main = execParser opts >>= runManyCalculations
