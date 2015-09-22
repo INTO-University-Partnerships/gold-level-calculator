@@ -11,8 +11,7 @@ import Parse
     ( parseScoreTarget
     , parseScoreGroup
     , toIELTSLevelDataMap
-    , collectCSVInputData
-    , collectCSVInputErrors
+    , collectCSVRecords
     )
 
 import Types
@@ -73,6 +72,5 @@ runManyCalculations (ManyCalcOpts f g) = do
             m   <- decode NoHeader csvData1
             vst <- parseScoreTarget m
             vsg <- parseScoreGroup m
-            _   <- collectCSVInputErrors 1 V.empty csvInputData
-            return (toIELTSLevelDataMap vst vsg, collectCSVInputData V.empty csvInputData)
-            where csvInputData = CS.decode NoHeader csvData2
+            rs  <- collectCSVRecords $ CS.decode NoHeader csvData2
+            return (toIELTSLevelDataMap vst vsg, rs)

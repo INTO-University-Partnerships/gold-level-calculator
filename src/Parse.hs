@@ -2,8 +2,7 @@ module Parse
     ( parseScoreTarget
     , parseScoreGroup
     , toIELTSLevelDataMap
-    , collectCSVInputData
-    , collectCSVInputErrors
+    , collectCSVRecords
     ) where
 
 import Types
@@ -14,11 +13,11 @@ import Types
     , IELTSLevel
     , IELTSLevelData(..)
     , IELTSLevelDataMap
-    , CSVInput
     )
 
+import Control.Monad.Writer (Writer, writer, runWriter, tell)
+import Data.List (intersperse)
 import Data.Csv (FromRecord, parseRecord, runParser)
-import Data.Csv.Streaming (Records(..))
 
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Csv.Streaming as CS
@@ -50,19 +49,14 @@ toIELTSLevelDataMap vst vsg = M.fromList . V.toList $ V.map (\(ScoreTarget l _) 
                 scoreGroupMap :: ScoreGroupMap
                 scoreGroupMap = M.fromList . V.toList $ V.map (\sg -> (scoreGroupName sg, sg)) $ V.filter ((==) l . scoreGroupLevel) vsg
 
-collectCSVInputData :: V.Vector CSVInput -> Records CSVInput -> V.Vector CSVInput
-collectCSVInputData v (Nil _ _) = v
-collectCSVInputData v (Cons r moreRecords) =
-    case r of
-        Right i -> collectCSVInputData (V.snoc v i) moreRecords
-        Left  _ -> collectCSVInputData v moreRecords
-
-collectCSVInputErrors :: Int -> V.Vector String -> CS.Records CSVInput -> Either String Bool
-collectCSVInputErrors _ v (CS.Nil _ _)
-    | l == 0    = Right True
-    | otherwise = Left $ V.foldl1 (\acc x -> acc ++ "\r\n" ++ x) v
-    where l     = V.length v
-collectCSVInputErrors row v (CS.Cons r moreRecords) =
-    case r of
-        Right _ -> collectCSVInputErrors (row + 1) v moreRecords
-        Left  e -> collectCSVInputErrors (row + 1) (V.snoc v $ "Row " ++ show row ++ " has error \"" ++ e ++ "\"") moreRecords
+collectCSVRecords :: CS.Records a -> Either String (V.Vector a)
+collectCSVRecords rs = if length s == 0 then Right v' else Left s
+    where
+        (v', xs) = runWriter $ f rs 1 V.empty
+        s = concat $ intersperse "\r\n" xs
+        f :: CS.Records a -> Int -> V.Vector a -> Writer [String] (V.Vector a)
+        f (CS.Nil _ _)             _   v = writer (v, [])
+        f (CS.Cons (Right r) more) row v = f more (row + 1) $ V.snoc v r
+        f (CS.Cons (Left e)  more) row v = do
+            tell ["Row " ++ show row ++ " has error \"" ++ e ++ "\""]
+            f more (row + 1) v
