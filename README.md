@@ -5,7 +5,7 @@ A command line programme to determine the GOLD level that users should be enroll
 ## Technology
 
 * [Stack](https://github.com/commercialhaskell/stack) is required to build the programme
-* It is currently built against [LTS Haskell 3.8](https://www.stackage.org/lts-3.8)
+* It is currently built against [LTS Haskell 3.17](https://www.stackage.org/lts-3.17)
 * [In-depth guide](https://github.com/commercialhaskell/stack/blob/master/doc/GUIDE.md) to Stack
 
 ## Build
