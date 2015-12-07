@@ -14,10 +14,10 @@ import qualified Data.Vector as V
 
 prop_toIELTSLevelDataMap :: Property
 prop_toIELTSLevelDataMap = once $ ieltsLevelDataMap' == ieltsLevelDataMap
-    where
-        vst = V.fromList $ M.elems $ M.map (\(IELTSLevelData st _) -> st) ieltsLevelDataMap
-        vsg = V.fromList $ concat . M.elems $ M.map (\(IELTSLevelData _ msg) -> M.elems msg) ieltsLevelDataMap
-        ieltsLevelDataMap' = toIELTSLevelDataMap vst vsg
+  where
+  vst = V.fromList $ M.elems $ M.map (\(IELTSLevelData st _) -> st) ieltsLevelDataMap
+  vsg = V.fromList $ concat . M.elems $ M.map (\(IELTSLevelData _ msg) -> M.elems msg) ieltsLevelDataMap
+  ieltsLevelDataMap' = toIELTSLevelDataMap vst vsg
 
 return []
 
